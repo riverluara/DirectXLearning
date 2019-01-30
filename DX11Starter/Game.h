@@ -4,7 +4,7 @@
 #include "SimpleShader.h"
 #include <DirectXMath.h>
 #include "Mesh.h"
-
+#include "GameEntity.h"
 class Game 
 	: public DXCore
 {
@@ -52,5 +52,12 @@ private:
 	Mesh* g1;
 	Mesh* g2;
 	Mesh* g3;
+
+	GameEntity* gameEntity1;
+	/*GameEntity* gameEntity2;
+	GameEntity* gameEntity3;
+	GameEntity* gameEntity4;
+	GameEntity* gameEntity5;
+	*/
 };
 

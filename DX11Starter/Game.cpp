@@ -1,4 +1,4 @@
-#include "Game.h"
+  #include "Game.h"
 #include "Vertex.h"
 
 
@@ -189,6 +189,8 @@ void Game::CreateBasicGeometry()
 	
 	//
 	g1 = new Mesh(vertices, 3, indices, 3, device);
+
+	gameEntity1 = new GameEntity(g1);
 	
 	g2 = new Mesh(vertices2, 3, indices2, 3,device);
 
@@ -223,8 +225,9 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 	float sinTime = sin(totalTime * 10);
-	XMMATRIX trans = XMMatrixTranslation(0.0f, sinTime, 0.0f);
-	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(trans));
+	/*XMMATRIX trans = XMMatrixTranslation(0.0f, sinTime, 0.0f);
+	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(trans));*/
+	gameEntity1->Move(sinTime, 0.0f, 0.0f);
 }
 
 // --------------------------------------------------------
@@ -250,7 +253,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	//  - This is actually a complex process of copying data to a local buffer
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
-	vertexShader->SetMatrix4x4("world", worldMatrix);
+	vertexShader->SetMatrix4x4("world", gameEntity1->GetWorldMatrix());
 	vertexShader->SetMatrix4x4("view", viewMatrix);
 	vertexShader->SetMatrix4x4("projection", projectionMatrix);
 
@@ -271,8 +274,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    have different geometry.
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	ID3D11Buffer* vertexBuffer1 = g1->GetVertexBuffer();
-	ID3D11Buffer* indexBuffer1 = g1->GetIndexBuffer();
+	ID3D11Buffer* vertexBuffer1 = gameEntity1->GetMeshVertexBuffer();
+	ID3D11Buffer* indexBuffer1 = gameEntity1->GetMeshIndexBuffer();
 	context->IASetVertexBuffers(0, 1, &vertexBuffer1, &stride, &offset);
 	context->IASetIndexBuffer(indexBuffer1, DXGI_FORMAT_R32_UINT, 0);
 
@@ -290,6 +293,27 @@ void Game::Draw(float deltaTime, float totalTime)
 	indexBuffer1 = g2->GetIndexBuffer();
 	context->IASetVertexBuffers(0, 1, &vertexBuffer1, &stride, &offset);
 	context->IASetIndexBuffer(indexBuffer1, DXGI_FORMAT_R32_UINT, 0);
+
+	// Send data to shader variables
+//  - Do this ONCE PER OBJECT you're drawing
+//  - This is actually a complex process of copying data to a local buffer
+//    and then copying that entire buffer to the GPU.  
+//  - The "SimpleShader" class handles all of that for you.
+	vertexShader->SetMatrix4x4("world", worldMatrix);
+	vertexShader->SetMatrix4x4("view", viewMatrix);
+	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+
+	// Once you've set all of the data you care to change for
+	// the next draw call, you need to actually send it to the GPU
+	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
+	vertexShader->CopyAllBufferData();
+
+	// Set the vertex and pixel shaders to use for the next Draw() command
+	//  - These don't technically need to be set every frame...YET
+	//  - Once you start applying different shaders to different objects,
+	//    you'll need to swap the current shaders before each draw
+	vertexShader->SetShader();
+	pixelShader->SetShader();
 
 	context->DrawIndexed(
 		3,     // The number of indices to use (we could draw a subset if we wanted)
