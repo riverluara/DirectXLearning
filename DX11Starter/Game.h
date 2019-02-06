@@ -54,10 +54,10 @@ private:
 	Mesh* g3;
 
 	GameEntity* gameEntity1;
-	/*GameEntity* gameEntity2;
+	GameEntity* gameEntity2;
 	GameEntity* gameEntity3;
 	GameEntity* gameEntity4;
 	GameEntity* gameEntity5;
-	*/
+	
 };
 

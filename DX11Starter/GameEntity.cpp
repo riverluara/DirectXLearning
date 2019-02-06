@@ -16,7 +16,7 @@ GameEntity::GameEntity(Mesh* mesh_1) {
 
 }
 GameEntity::~GameEntity() {
-
+	
 }
 
 void GameEntity::SetTranslation(float x, float y, float z) {
@@ -30,16 +30,25 @@ void GameEntity::SetRotate(float x, float y, float z) {
 }
 
 void GameEntity::Move(float x, float y, float z) {
+	SetTranslation(x, y, z);
 	DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(x, y, z);
-	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(translation));
+	DirectX::XMMATRIX scaling = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(rot.x, rot.y, rot.z);
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(scaling * rotation * translation));
 }
 void GameEntity::Scale(float x, float y, float z) {
+	SetScale(x, y, z);
+	DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(trans.x, trans.y, trans.z);
+	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(rot.x, rot.y, rot.z);
 	DirectX::XMMATRIX scaling = DirectX::XMMatrixScaling(x, y, z);
-	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(scaling));
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(scaling * rotation * translation));
 }
 void GameEntity::Rotate(float x, float y, float z) {
+	SetRotate(x, y, z);
+	DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(trans.x, trans.y, trans.z);
+	DirectX::XMMATRIX scaling = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
 	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(x, y, z);
-	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(rotation));
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(scaling * rotation * translation));
 }
 
 DirectX::XMFLOAT4X4 GameEntity::GetWorldMatrix() {
