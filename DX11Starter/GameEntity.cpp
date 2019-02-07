@@ -63,3 +63,21 @@ ID3D11Buffer* GameEntity::GetMeshVertexBuffer() {
 ID3D11Buffer* GameEntity::GetMeshIndexBuffer() {
 	return mesh->GetIndexBuffer();
 }
+
+void GameEntity::PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix) {
+	vertexShader->SetMatrix4x4("world", worldMatrix);
+	vertexShader->SetMatrix4x4("view", viewMatrix);
+	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+
+	// Once you've set all of the data you care to change for
+	// the next draw call, you need to actually send it to the GPU
+	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
+	vertexShader->CopyAllBufferData();
+
+	// Set the vertex and pixel shaders to use for the next Draw() command
+	//  - These don't technically need to be set every frame...YET
+	//  - Once you start applying different shaders to different objects,
+	//    you'll need to swap the current shaders before each draw
+	vertexShader->SetShader();
+	pixelShader->SetShader();
+}

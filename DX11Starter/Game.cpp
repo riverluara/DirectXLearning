@@ -59,6 +59,7 @@ Game::~Game()
 	delete g1;
 	delete g2;
 	delete g3;
+	delete camera1;
 	
 }
 
@@ -201,6 +202,8 @@ void Game::CreateBasicGeometry()
 	gameEntity4 = new GameEntity(g2);
 	gameEntity5 = new GameEntity(g2);
 	g3 = new Mesh(vertices3, 4, indices3, 6, device);
+
+	camera1 = new Camera(width, height);
 }
 
 
@@ -214,12 +217,7 @@ void Game::OnResize()
 	DXCore::OnResize();
 
 	// Update our projection matrix since the window size changed
-	XMMATRIX P = XMMatrixPerspectiveFovLH(
-		0.25f * 3.1415926535f,	// Field of View Angle
-		(float)width / height,	// Aspect ratio
-		0.1f,				  	// Near clip plane distance
-		100.0f);			  	// Far clip plane distance
-	XMStoreFloat4x4(&projectionMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+	camera1->UpdateProjectionMatrix(width, height);
 }
 
 // --------------------------------------------------------
@@ -251,6 +249,8 @@ void Game::Update(float deltaTime, float totalTime)
 	gameEntity5->Scale(0.5f, 0.5f, 1.0f);
 	gameEntity5->Move(2.8f * sinTime, 0.0f, 0.0f);
 	//gameEntity5->Scale(0.75f * sinTime + 0.75f, 0.75f * sinTime + 0.75f, 1.0f);
+
+	camera1->Update(deltaTime);
 	
 	
 
@@ -281,8 +281,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	vertexShader->SetMatrix4x4("world", gameEntity1->GetWorldMatrix());
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+	vertexShader->SetMatrix4x4("view", camera1->GetViewMatrix());
+	vertexShader->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
@@ -318,8 +318,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	vertexShader->SetMatrix4x4("world", gameEntity2->GetWorldMatrix());
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+	vertexShader->SetMatrix4x4("view", camera1->GetViewMatrix());
+	vertexShader->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
@@ -360,8 +360,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	vertexShader->SetMatrix4x4("world", gameEntity3->GetWorldMatrix());
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+	vertexShader->SetMatrix4x4("view", camera1->GetViewMatrix());
+	vertexShader->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
@@ -403,8 +403,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	vertexShader->SetMatrix4x4("world", gameEntity4->GetWorldMatrix());
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+	vertexShader->SetMatrix4x4("view", camera1->GetViewMatrix());
+	vertexShader->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
@@ -445,8 +445,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	vertexShader->SetMatrix4x4("world", gameEntity5->GetWorldMatrix());
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
+	vertexShader->SetMatrix4x4("view", camera1->GetViewMatrix());
+	vertexShader->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
@@ -517,6 +517,8 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
+	;
+
 
 	// We don't care about the tracking the cursor outside
 	// the window anymore (we're not dragging if the mouse is up)
@@ -531,7 +533,15 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
+	if (buttonState & 0x0001) {
 
+		float distanceX = float(x - prevMousePos.x);
+		float distanceY = float(y - prevMousePos.y);
+		float rotateSpeed = 0.001f;
+		camera1->SetCameraRotation(distanceX * rotateSpeed, distanceY * rotateSpeed);
+		
+	}
+	
 	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;
 	prevMousePos.y = y;

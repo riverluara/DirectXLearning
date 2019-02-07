@@ -1,6 +1,6 @@
 #pragma once
 #include "Mesh.h"
-
+#include "Material.h"
 class GameEntity {
 public:
 	GameEntity(Mesh* mesh_1);
@@ -20,6 +20,7 @@ public:
 	ID3D11Buffer* GetMeshVertexBuffer();
 	ID3D11Buffer* GetMeshIndexBuffer();
 
+	void PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix);
 private:
 	Mesh* mesh;
 	DirectX::XMFLOAT3 trans;
@@ -27,5 +28,5 @@ private:
 	DirectX::XMFLOAT3 rot;
 	DirectX::XMFLOAT4X4 worldMatrix;
 
-
+	Material* material1;
 };

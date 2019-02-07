@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "Mesh.h"
 #include "GameEntity.h"
+#include "Camera.h"
 class Game 
 	: public DXCore
 {
@@ -58,6 +59,8 @@ private:
 	GameEntity* gameEntity3;
 	GameEntity* gameEntity4;
 	GameEntity* gameEntity5;
+
+	Camera *camera1;
 	
 };
 
