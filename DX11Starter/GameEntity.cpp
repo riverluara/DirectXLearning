@@ -1,6 +1,7 @@
 #include "GameEntity.h"
 
-GameEntity::GameEntity(Mesh* mesh_1) {
+
+GameEntity::GameEntity(Mesh* mesh_1, Material* mat1) {
 	
 	mesh = mesh_1;
 	trans = {0.0f, 0.0f, 0.0f};
@@ -12,6 +13,7 @@ GameEntity::GameEntity(Mesh* mesh_1) {
 	 0.0f, 0.0f, 1.0f, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f
 	};
+	material1 = mat1;
 	
 
 }
@@ -65,19 +67,33 @@ ID3D11Buffer* GameEntity::GetMeshIndexBuffer() {
 }
 
 void GameEntity::PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix) {
-	vertexShader->SetMatrix4x4("world", worldMatrix);
-	vertexShader->SetMatrix4x4("view", viewMatrix);
-	vertexShader->SetMatrix4x4("projection", projectionMatrix);
-
+	
+	material1->VertexShaderSetMatrices(worldMatrix, viewMatrix, projectionMatrix);
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
-	vertexShader->CopyAllBufferData();
+	material1->VertexShaderCopyAllBufferData();
 
 	// Set the vertex and pixel shaders to use for the next Draw() command
 	//  - These don't technically need to be set every frame...YET
 	//  - Once you start applying different shaders to different objects,
 	//    you'll need to swap the current shaders before each draw
-	vertexShader->SetShader();
-	pixelShader->SetShader();
+	material1->SetVertexShader();
+	material1->SetPixelShader();
+	
+}
+
+void GameEntity::Draw(ID3D11DeviceContext* context) {
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vertexBuffer1 = mesh->GetVertexBuffer();
+	ID3D11Buffer* indexBuffer1 = mesh->GetIndexBuffer();
+	context->IASetVertexBuffers(0, 1, &vertexBuffer1, &stride, &offset);
+	context->IASetIndexBuffer(indexBuffer1, DXGI_FORMAT_R32_UINT, 0);
+
+	context->DrawIndexed(
+		mesh->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+		0,     // Offset to the first index we want to use
+		0);    // Offset to add to each index when looking up vertices
 }

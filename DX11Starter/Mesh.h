@@ -14,6 +14,7 @@ public:
 		int numVertices_1,
 		unsigned int* indices_1,
 		int numIndic_1,ID3D11Device* device_1);
+	Mesh(char* file, ID3D11Device* device);
 	~Mesh();
 	
 
@@ -30,6 +31,9 @@ private:
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
+	void CreateBuffer(Vertex* vertices_1,
+		unsigned int* indices_1,
+		int numIndice_1, ID3D11Device* device);
 
 
 	

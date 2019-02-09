@@ -6,6 +6,7 @@
 #include "Mesh.h"
 #include "GameEntity.h"
 #include "Camera.h"
+#include "Material.h"
 class Game 
 	: public DXCore
 {
@@ -61,6 +62,7 @@ private:
 	GameEntity* gameEntity5;
 
 	Camera *camera1;
+	Material* material1;
 	
 };
 

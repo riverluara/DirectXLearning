@@ -1,11 +1,2 @@
 ﻿  Game.cpp
-  GameEntity.cpp
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(68): error C2065: 'vertexShader': undeclared identifier
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(69): error C2065: 'vertexShader': undeclared identifier
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(70): error C2065: 'vertexShader': undeclared identifier
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(75): error C2065: 'vertexShader': undeclared identifier
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(81): error C2065: 'vertexShader': undeclared identifier
-d:\profiles\yj9812\downloads\a4\learning\dx11starter\gameentity.cpp(82): error C2065: 'pixelShader': undeclared identifier
-  Main.cpp
-  Material.cpp
-  Generating Code...
+  DX11Starter.vcxproj -> E:\learning\Game Graphics Programming\Assignment4\Learning\x64\Debug\DX11Starter.exe

@@ -3,7 +3,7 @@
 #include "Material.h"
 class GameEntity {
 public:
-	GameEntity(Mesh* mesh_1);
+	GameEntity(Mesh* mesh_1, Material* mat1);
 	~GameEntity();
 	//
 	void SetTranslation(float x, float y, float z);
@@ -21,6 +21,7 @@ public:
 	ID3D11Buffer* GetMeshIndexBuffer();
 
 	void PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix);
+	void Draw(ID3D11DeviceContext* context);
 private:
 	Mesh* mesh;
 	DirectX::XMFLOAT3 trans;
