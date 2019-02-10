@@ -12,8 +12,9 @@ struct VertexToPixel
 	//  |    |                |
 	//  v    v                v
 	float4 position		: SV_POSITION;
-	float3 normal       : NORMAL;      //Normal
-	float2 uv           : TEXCOORD;    //UV
+	float3 normal       : NORMAL;
+
+	
 };
 
 // --------------------------------------------------------
@@ -25,11 +26,38 @@ struct VertexToPixel
 //    "put the output of this into the current render target"
 // - Named "main" because that's the default the shader compiler looks for
 // --------------------------------------------------------
+struct DirectionaLight 
+{
+	float4 AmbientColor;
+	float4 DiffuseColor;
+	float3 Direction;
+};
+cbuffer dLightData : register(b0)
+{
+	DirectionaLight dLight1;
+};
+cbuffer dLightData2 : register(b1)
+{
+	DirectionaLight dLight2;
+};
+float4 GetCalculateColors(float3 normal, DirectionaLight light) {
+	normal = normalize(normal);
+	float negate = -1.0f;
+	float3 direction = light.Direction * negate;
+	direction = normalize(direction);
+	float NdotL = dot(normal, direction);
+	NdotL = saturate(NdotL);
+
+	return light.AmbientColor + (light.DiffuseColor * NdotL);
+}
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return float4(0, 1, 1, 1 );
+	
+    float4 lightColor1 = GetCalculateColors(input.normal, dLight1);
+	float4 lightColor2 = GetCalculateColors(input.normal, dLight2);
+	return lightColor1 + lightColor2;
 }

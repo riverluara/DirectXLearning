@@ -7,6 +7,7 @@
 #include "GameEntity.h"
 #include "Camera.h"
 #include "Material.h"
+#include "Lights.h"
 class Game 
 	: public DXCore
 {
@@ -27,6 +28,10 @@ public:
 	void OnMouseUp	 (WPARAM buttonState, int x, int y);
 	void OnMouseMove (WPARAM buttonState, int x, int y);
 	void OnMouseWheel(float wheelDelta,   int x, int y);
+	DirectionaLight GetLight(DirectionaLight light, float lightAmount);
+	
+
+
 private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
@@ -63,6 +68,9 @@ private:
 
 	Camera *camera1;
 	Material* material1;
+
+	DirectionaLight dLight1;
+	DirectionaLight dLight2;
 	
 };
 

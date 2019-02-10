@@ -76,6 +76,19 @@ void Game::Init()
 	CreateMatrices();
 	CreateBasicGeometry();
 
+	dLight1.AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+	dLight1.DiffuseColor = { 0.0f, 0.0f, 1.0f, 1.0f };
+	dLight1.Direction = { 1.0f, -1.0f, 0.0f };
+	
+	pixelShader->SetData("dLight1", &dLight1, sizeof(DirectionaLight));
+	pixelShader->CopyAllBufferData();
+
+	dLight2.AmbientColor = { 0.1f, 0.1f, 0.5f, 1.0f };
+	dLight2.DiffuseColor = { 0.0f, 1.0f, 0.0f, 1.0f };
+	dLight2.Direction = { -0.50f, 1.0f, 0.0f };
+	pixelShader->SetData("dLight2", &dLight2, sizeof(DirectionaLight));
+	pixelShader->CopyAllBufferData();
+
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
@@ -202,7 +215,7 @@ void Game::CreateBasicGeometry()
 	gameEntity1 = new GameEntity(g1, material1);
 	gameEntity2 = new GameEntity(g1, material1);
 	gameEntity3 = new GameEntity(g1, material1);
-	g2 = new Mesh(vertices2, 3, indices2, 3,device);
+	g2 = new Mesh("../../OBJ Files/cone.obj",device);
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
 	g3 = new Mesh(vertices3, 4, indices3, 6, device);
@@ -250,10 +263,10 @@ void Game::Update(float deltaTime, float totalTime)
     gameEntity3->Rotate(0.0f, 0.0f, totalTime*2.0f);
 	gameEntity3->Move(sinTime, 0.0f, 2.0f);
 
-	gameEntity4->Scale(0.5f, 0.5f, 1.0f);
+	//gameEntity4->Scale(0.5f, 0.5f, 1.0f);
 	gameEntity4->Move(-2.8f * sinTime,0.0f , -1.0f);
 
-	gameEntity5->Scale(0.5f, 0.5f, 1.0f);
+	//gameEntity5->Scale(0.5f, 0.5f, 1.0f);
 	gameEntity5->Move(2.8f * sinTime, 0.0f, -1.0f);
 	//gameEntity5->Scale(0.75f * sinTime + 0.75f, 0.75f * sinTime + 0.75f, 1.0f);
 
@@ -424,5 +437,14 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
 	// Add any custom code here...
+}
+DirectionaLight Game::GetLight(DirectionaLight light,float lightAmount) {
+	DirectX::XMVECTOR direction;
+	direction = DirectX::XMLoadFloat3(&light.Direction);
+	direction = DirectX::XMVector3Normalize(direction * (-1.0f));
+	DirectX::XMStoreFloat3(&light.Direction, direction);
+	return light;
+
+
 }
 #pragma endregion
