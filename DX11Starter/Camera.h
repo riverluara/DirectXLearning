@@ -10,11 +10,11 @@ public:
 
 	XMFLOAT4X4 GetViewMatrix();
 	XMFLOAT4X4 GetProjectionMatrix();
-
+	XMFLOAT3 GetCameraPosition();
 	void Update(float deltaTiime);
 	void SetCameraRotation(float rotationX, float rotationY);
 	void UpdateProjectionMatrix(unsigned int width, unsigned int height);
-
+	
 	
 private:
 

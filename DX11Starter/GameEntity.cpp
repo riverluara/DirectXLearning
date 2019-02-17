@@ -67,8 +67,15 @@ ID3D11Buffer* GameEntity::GetMeshIndexBuffer() {
 }
 
 void GameEntity::PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix) {
+	DirectX::XMMATRIX w = DirectX::XMLoadFloat4x4(&worldMatrix);
+	DirectX::XMVECTOR d = DirectX::XMMatrixDeterminant(w);
+	DirectX::XMMATRIX world = DirectX::XMMatrixInverse(&d, w);
+		
+	world = DirectX::XMMatrixTranspose(world);
+	DirectX::XMStoreFloat4x4(&transWorld, world);
 	
-	material1->VertexShaderSetMatrices(worldMatrix, viewMatrix, projectionMatrix);
+
+	material1->VertexShaderSetMatrices(worldMatrix, viewMatrix, projectionMatrix, transWorld);
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!

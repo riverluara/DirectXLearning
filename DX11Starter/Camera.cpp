@@ -75,6 +75,17 @@ XMFLOAT4X4 Camera::GetProjectionMatrix() {
 	
 	return projectionMatrix;
 }
+
+XMFLOAT3 Camera::GetCameraPosition() {
+
+	XMFLOAT3 currentPosition;
+	XMFLOAT4 position;
+	XMStoreFloat4(&position, cameraPosition);
+	currentPosition.x = position.x;
+	currentPosition.y = position.y;
+	currentPosition.z = position.z;
+	return currentPosition;
+}
 void Camera::UpdateProjectionMatrix(unsigned int width, unsigned int height) {
 	XMMATRIX P = XMMatrixPerspectiveFovLH(
 		0.25f * 3.1415926535f,	// Field of View Angle

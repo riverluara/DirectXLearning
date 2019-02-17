@@ -51,7 +51,7 @@ Game::~Game()
 	
 	delete gameEntity1;
 	delete gameEntity2;
-	delete gameEntity3;
+	//delete gameEntity3;
 	delete gameEntity4;
 	delete gameEntity5;
 	delete g1;
@@ -81,13 +81,20 @@ void Game::Init()
 	dLight1.Direction = { 1.0f, -1.0f, 0.0f };
 	
 	pixelShader->SetData("dLight1", &dLight1, sizeof(DirectionaLight));
-	pixelShader->CopyAllBufferData();
+	//pixelShader->CopyAllBufferData();
 
 	dLight2.AmbientColor = { 0.1f, 0.1f, 0.5f, 1.0f };
 	dLight2.DiffuseColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 	dLight2.Direction = { -0.50f, 1.0f, 0.0f };
 	pixelShader->SetData("dLight2", &dLight2, sizeof(DirectionaLight));
-	pixelShader->CopyAllBufferData();
+	//pixelShader->CopyAllBufferData();
+
+	
+	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
+
+	 // This sends data to GPU!!!
+	
+
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -214,8 +221,8 @@ void Game::CreateBasicGeometry()
 
 	gameEntity1 = new GameEntity(g1, material1);
 	gameEntity2 = new GameEntity(g1, material1);
-	gameEntity3 = new GameEntity(g1, material1);
-	g2 = new Mesh("../../OBJ Files/cone.obj",device);
+	//gameEntity3 = new GameEntity(g1, material1);
+	g2 = new Mesh("../../OBJ Files/sphere.obj",device);
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
 	g3 = new Mesh(vertices3, 4, indices3, 6, device);
@@ -249,19 +256,19 @@ void Game::Update(float deltaTime, float totalTime)
 	float sinTime = sin(totalTime * 2);
 	/*XMMATRIX trans = XMMatrixTranslation(0.0f, sinTime, 0.0f);
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(trans));*/
-	gameEntity1->Scale(0.5f, 0.5f, 1.0f);
-	//gameEntity1->Rotate(0.0f, 0.0f, totalTime * 2.0f);
-	gameEntity1->Move(sinTime, 0.0f, 0.0f);
+	gameEntity1->Scale(1.0f, 1.0f, 1.0f);
+	gameEntity1->Rotate(0.0f, 0.0f, totalTime * 2.0f);
+	gameEntity1->Move(sinTime, 0.0f, 1.0f);
 	
-	//gameEntity2->Move(0.0f, 0.0f, 3.0f);
-	gameEntity2->Scale(1.1f, 1.1f, 1.1f);
+	gameEntity2->Move(0.0f, 0.0f, 3.0f);
+	gameEntity2->Scale(2.5f, 2.5f, 2.5f);
 	gameEntity2->Rotate(0.0f, 0.0f, totalTime * 2.0f + 60.0f);
-	gameEntity2->Move(sinTime, 0.0f, 1.0f);
+	gameEntity2->Move(sinTime, 0.0f, 5.0f);
 
 	//gameEntity3->Move(0.0f, 5.0f, 10.0f);
-	gameEntity3->Scale(abs(1.8f * sinTime),abs(1.8f * sinTime), 1.0f);
-    gameEntity3->Rotate(0.0f, 0.0f, totalTime*2.0f);
-	gameEntity3->Move(sinTime, 0.0f, 2.0f);
+	//gameEntity3->Scale(abs(1.8f * sinTime),abs(1.8f * sinTime), 1.0f);
+    //gameEntity3->Rotate(0.0f, 0.0f, totalTime*2.0f);
+	//gameEntity3->Move(sinTime, 0.0f, 2.0f);
 
 	//gameEntity4->Scale(0.5f, 0.5f, 1.0f);
 	gameEntity4->Move(-2.8f * sinTime,0.0f , -1.0f);
@@ -294,12 +301,19 @@ void Game::Draw(float deltaTime, float totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+	pixelShader->SetFloat3("PointLightPosition", XMFLOAT3(0, 5, 0));
+	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0, 0, 1));
+
+	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); // Matches camera view definition above
+
+	pixelShader->CopyAllBufferData(); // This sends data to GPU!!!
 	//GameEntity1
 	// Send data to shader variables
 	//  - Do this ONCE PER OBJECT you're drawing
 	//  - This is actually a complex process of copying data to a local buffer
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
+	
 	gameEntity1->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 
 	// Set buffers in the input assembler
@@ -326,12 +340,12 @@ void Game::Draw(float deltaTime, float totalTime)
 	//  - This is actually a complex process of copying data to a local buffer
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
-	gameEntity3->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	//gameEntity3->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
 	//    have different geometry.
 	
-	gameEntity3->Draw(context);
+	//gameEntity3->Draw(context);
 
 		//GameEntity4
 	// Send data to shader variables

@@ -28,6 +28,7 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rot;
 	DirectX::XMFLOAT4X4 worldMatrix;
+	DirectX::XMFLOAT4X4 transWorld;
 
 	Material* material1;
 };

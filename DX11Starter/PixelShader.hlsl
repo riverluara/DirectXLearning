@@ -13,7 +13,7 @@ struct VertexToPixel
 	//  v    v                v
 	float4 position		: SV_POSITION;
 	float3 normal       : NORMAL;
-
+	float3 worldPos		: POSITION;
 	
 };
 
@@ -35,11 +35,13 @@ struct DirectionaLight
 cbuffer dLightData : register(b0)
 {
 	DirectionaLight dLight1;
-};
-cbuffer dLightData2 : register(b1)
-{
 	DirectionaLight dLight2;
+	float3 PointLightPosition;
+	float3 PointLightColor;
+
+	float3 CameraPosition;
 };
+
 float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 	normal = normalize(normal);
 	float negate = -1.0f;
@@ -52,6 +54,33 @@ float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 }
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	float3 surfaceColor = float3(1, 1, 1);
+	float shininess = 32.0f; // Arbitrary surface shininess value
+
+	float3 dirToCamera = normalize(CameraPosition - input.worldPos);
+
+
+	// POINT LIGHT //////////////////////////////////
+
+	// Direction TO the point light from the surface
+	float3 dirToPointLight = normalize(PointLightPosition - input.worldPos);
+
+	float3 pointNdotL = dot(input.normal, dirToPointLight);
+	pointNdotL = saturate(pointNdotL); // Remember to CLAMP between 0 and 1
+
+	// Specular calc for reflections (Phong)
+	float3 pointRefl = reflect(-dirToPointLight, input.normal);
+	float pointSpec = pow(saturate(dot(pointRefl, dirToCamera)), shininess);
+
+	// Combine the surface and lighting
+	float3 finalPointLight =
+		/*surfaceColor **/ PointLightColor * pointNdotL
+		+ pointSpec.rrr; // Making the spec value into a float3
+
+
+
+
+
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
@@ -59,5 +88,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
     float4 lightColor1 = GetCalculateColors(input.normal, dLight1);
 	float4 lightColor2 = GetCalculateColors(input.normal, dLight2);
-	return lightColor1 + lightColor2;
+	return lightColor1 + lightColor2 + float4(finalPointLight, 1.0f);
 }
