@@ -1,6 +1,6 @@
   #include "Game.h"
 #include "Vertex.h"
-
+#include "WICTextureLoader.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -204,7 +204,7 @@ void Game::CreateBasicGeometry()
 	};
 	unsigned int indices2[] = { 0, 1, 2 };
 
-
+	//CreateWICTextureFromFile(device,context)
 	//Object3
 	Vertex vertices3[] =
 	{
