@@ -91,10 +91,12 @@ void Game::Init()
 
 	
 	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
-
+	CreateWICTextureFromFile(device, context, L"../../Textures/flower", 0, &flowerSRV);
 	 // This sends data to GPU!!!
-	
+	D3D11_SAMPLER_DESC sampDesc = {};
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 
+	
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -204,7 +206,7 @@ void Game::CreateBasicGeometry()
 	};
 	unsigned int indices2[] = { 0, 1, 2 };
 
-	//CreateWICTextureFromFile(device,context)
+	
 	//Object3
 	Vertex vertices3[] =
 	{

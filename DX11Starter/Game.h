@@ -42,7 +42,8 @@ private:
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
-
+	ID3D11ShaderResourceView* flowerSRV;
+	ID3D11SamplerState* samplerState;
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
