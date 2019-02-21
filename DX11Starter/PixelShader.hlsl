@@ -14,7 +14,7 @@ struct VertexToPixel
 	float4 position		: SV_POSITION;
 	float3 normal       : NORMAL;
 	float3 worldPos		: POSITION;
-	
+	float2 uv           : TEXCOORD;    //UV
 };
 
 // --------------------------------------------------------
@@ -52,9 +52,11 @@ float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 
 	return light.AmbientColor + (light.DiffuseColor * NdotL);
 }
+Texture2D SRview : register(t0);
+SamplerState sampState : register(s0);
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	float3 surfaceColor = float3(1, 1, 1);
+	float4 surfaceColor = SRview.Sample(sampState, input.uv);
 	float shininess = 32.0f; // Arbitrary surface shininess value
 
 	float3 dirToCamera = normalize(CameraPosition - input.worldPos);
@@ -78,7 +80,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 		+ pointSpec.rrr; // Making the spec value into a float3
 
 
-
+	
 
 
 	// Just return the input color
@@ -88,5 +90,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
     float4 lightColor1 = GetCalculateColors(input.normal, dLight1);
 	float4 lightColor2 = GetCalculateColors(input.normal, dLight2);
-	return lightColor1 + lightColor2 + float4(finalPointLight, 1.0f);
+	return surfaceColor* (lightColor1 + lightColor2 + float4(finalPointLight, 1.0f));
 }

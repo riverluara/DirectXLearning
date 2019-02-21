@@ -80,7 +80,9 @@ void GameEntity::PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOA
 	// the next draw call, you need to actually send it to the GPU
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
 	material1->VertexShaderCopyAllBufferData();
-
+	material1->SetSamplerState();
+	material1->SetShaderResourceView();
+	material1->PixelShaderCopyAllBufferData(); // This sends data to GPU!!!
 	// Set the vertex and pixel shaders to use for the next Draw() command
 	//  - These don't technically need to be set every frame...YET
 	//  - Once you start applying different shaders to different objects,

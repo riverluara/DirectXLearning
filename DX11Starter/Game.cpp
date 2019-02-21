@@ -48,7 +48,8 @@ Game::~Game()
 	
 	// Delete our simple shader objects, which
 	// will clean up their own internal DirectX stuff
-	
+	samplerState->Release();
+	clothSRV->Release();
 	delete gameEntity1;
 	delete gameEntity2;
 	//delete gameEntity3;
@@ -69,6 +70,17 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
+	CreateWICTextureFromFile(device, context, L"../../Textures/cloth.jpg", 0, &clothSRV);
+	// This sends data to GPU!!!
+	D3D11_SAMPLER_DESC sampDesc = {};
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&sampDesc, &samplerState);
+
+
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -77,25 +89,21 @@ void Game::Init()
 	CreateBasicGeometry();
 
 	dLight1.AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-	dLight1.DiffuseColor = { 0.0f, 0.0f, 1.0f, 1.0f };
+	dLight1.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 	dLight1.Direction = { 1.0f, -1.0f, 0.0f };
 	
 	pixelShader->SetData("dLight1", &dLight1, sizeof(DirectionaLight));
 	//pixelShader->CopyAllBufferData();
 
 	dLight2.AmbientColor = { 0.1f, 0.1f, 0.5f, 1.0f };
-	dLight2.DiffuseColor = { 0.0f, 1.0f, 0.0f, 1.0f };
+	dLight2.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 	dLight2.Direction = { -0.50f, 1.0f, 0.0f };
 	pixelShader->SetData("dLight2", &dLight2, sizeof(DirectionaLight));
 	//pixelShader->CopyAllBufferData();
 
 	
 	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
-	CreateWICTextureFromFile(device, context, L"../../Textures/flower", 0, &flowerSRV);
-	 // This sends data to GPU!!!
-	D3D11_SAMPLER_DESC sampDesc = {};
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-
+	
 	
 
 	// Tell the input assembler stage of the pipeline what kind of
@@ -218,8 +226,8 @@ void Game::CreateBasicGeometry()
 	unsigned int indices3[] = { 0, 1, 2, 1, 3, 2};
 	
 	//
-	material1 = new Material(vertexShader, pixelShader);
-	g1 = new Mesh("../../OBJ Files/helix.obj", device);
+	material1 = new Material(vertexShader, pixelShader, clothSRV, samplerState);
+	g1 = new Mesh("../../OBJ Files/cube.obj", device);
 
 	gameEntity1 = new GameEntity(g1, material1);
 	gameEntity2 = new GameEntity(g1, material1);
@@ -303,12 +311,13 @@ void Game::Draw(float deltaTime, float totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+	//Set Point Light
 	pixelShader->SetFloat3("PointLightPosition", XMFLOAT3(0, 5, 0));
 	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0, 0, 1));
 
 	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); // Matches camera view definition above
 
-	pixelShader->CopyAllBufferData(); // This sends data to GPU!!!
+	
 	//GameEntity1
 	// Send data to shader variables
 	//  - Do this ONCE PER OBJECT you're drawing

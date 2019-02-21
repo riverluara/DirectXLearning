@@ -1,8 +1,10 @@
 #include "Material.h"
 
-Material::Material(SimpleVertexShader* vShader, SimplePixelShader* pShader) {
+Material::Material(SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11ShaderResourceView* shaderResourceView, ID3D11SamplerState* samplerState) {
 	vertexShader = vShader;
 	pixelShader = pShader;
+	SRView = shaderResourceView;
+	sampState = samplerState;
 }
 Material::~Material() {
 	
@@ -22,6 +24,10 @@ void Material::VertexShaderCopyAllBufferData() {
 
 	vertexShader->CopyAllBufferData();
 }
+void Material::PixelShaderCopyAllBufferData() {
+
+	pixelShader->CopyAllBufferData();
+}
 
 void Material::SetVertexShader() {
 	
@@ -30,4 +36,20 @@ void Material::SetVertexShader() {
 void Material::SetPixelShader() {
 
 	pixelShader->SetShader();
+}
+
+ID3D11ShaderResourceView* Material::GetSRView() {
+
+	return SRView;
+}
+ID3D11SamplerState* Material::GetSamplerState() {
+
+	return sampState;
+}
+void Material::SetSamplerState() {
+
+	pixelShader->SetSamplerState("sampState", sampState);
+}
+void Material::SetShaderResourceView() {
+	pixelShader->SetShaderResourceView("SRview", SRView);
 }
