@@ -28,6 +28,7 @@ struct VertexShaderInput
 	float3 position		: POSITION;     // XYZ position
 	float3 normal       : NORMAL;      //Normal
 	float2 uv           : TEXCOORD;    //UV
+	float3 tangent      : TANGENT;
 };
 
 // Struct representing the data we're sending down the pipeline
@@ -46,6 +47,7 @@ struct VertexToPixel
 	float3 normal       : NORMAL;      //Normal
 	float3 worldPos		: POSITION;
 	float2 uv           : TEXCOORD;    //UV
+	float3 tangent      : TANGENT;
 	
 };
 
@@ -90,5 +92,6 @@ VertexToPixel main( VertexShaderInput input )
 	output.uv = input.uv;
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
+	output.tangent = normalize(mul(input.tangent, transWorld));
 	return output;
 }

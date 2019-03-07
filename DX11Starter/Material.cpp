@@ -1,10 +1,11 @@
 #include "Material.h"
 
-Material::Material(SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11ShaderResourceView* shaderResourceView, ID3D11SamplerState* samplerState) {
+Material::Material(SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11ShaderResourceView* shaderResourceView, ID3D11ShaderResourceView* NormalMapSRView, ID3D11SamplerState* samplerState) {
 	vertexShader = vShader;
 	pixelShader = pShader;
 	SRView = shaderResourceView;
 	sampState = samplerState;
+	NormalSRView = NormalMapSRView;
 }
 Material::~Material() {
 	
@@ -46,10 +47,13 @@ ID3D11SamplerState* Material::GetSamplerState() {
 
 	return sampState;
 }
-void Material::SetSamplerState() {
+void Material::SetSamplerState(std::string name) {
 
-	pixelShader->SetSamplerState("sampState", sampState);
+	pixelShader->SetSamplerState(name, sampState);
 }
-void Material::SetShaderResourceView() {
-	pixelShader->SetShaderResourceView("SRview", SRView);
+void Material::SetShaderResourceView(std::string name) {
+	pixelShader->SetShaderResourceView(name, SRView);
+}
+void Material::SetShaderResourceNormalMapView(std::string name) {
+	pixelShader->SetShaderResourceView(name, NormalSRView);
 }

@@ -42,7 +42,8 @@ private:
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
-	ID3D11ShaderResourceView* clothSRV;
+	ID3D11ShaderResourceView* rockSRV;
+	ID3D11ShaderResourceView* rockNormalSRV;
 	ID3D11SamplerState* samplerState;
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
@@ -69,7 +70,7 @@ private:
 
 	Camera *camera1;
 	Material* material1;
-
+	Material* material2;
 	DirectionaLight dLight1;
 	DirectionaLight dLight2;
 	

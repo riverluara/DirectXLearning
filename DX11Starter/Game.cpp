@@ -70,7 +70,8 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
-	CreateWICTextureFromFile(device, context, L"../../Textures/cloth.jpg", 0, &clothSRV);
+	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
+	CreateWICTextureFromFile(device, context, L"../../Textures/rockNormal.jpg", 0, &rockNormalSRV);
 	// This sends data to GPU!!!
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -226,7 +227,8 @@ void Game::CreateBasicGeometry()
 	unsigned int indices3[] = { 0, 1, 2, 1, 3, 2};
 	
 	//
-	material1 = new Material(vertexShader, pixelShader, clothSRV, samplerState);
+	material1 = new Material(vertexShader, pixelShader, rockSRV, samplerState);
+	//material2 = new Material(vertexShader, pixelShader, rockNormalSRV, samplerState);
 	g1 = new Mesh("../../OBJ Files/cube.obj", device);
 
 	gameEntity1 = new GameEntity(g1, material1);
@@ -313,7 +315,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		0);
 	//Set Point Light
 	pixelShader->SetFloat3("PointLightPosition", XMFLOAT3(0, 5, 0));
-	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0, 0, 1));
+	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0.5, 0.5, 0.5));
 
 	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); // Matches camera view definition above
 

@@ -15,6 +15,7 @@ struct VertexToPixel
 	float3 normal       : NORMAL;
 	float3 worldPos		: POSITION;
 	float2 uv           : TEXCOORD;    //UV
+	float3 tangent      : TANGENT;
 };
 
 // --------------------------------------------------------
@@ -52,10 +53,14 @@ float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 
 	return light.AmbientColor + (light.DiffuseColor * NdotL);
 }
-Texture2D SRview : register(t0);
-SamplerState sampState : register(s0);
+Texture2D SRview : register(t0);// Texture
+SamplerState sampState : register(s0);//How you use  your texture
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	input.normal = normalize(input.normal);
+	input.tangent = normalize(input.normal);
+
+	float3 normalMap = 
 	float4 surfaceColor = SRview.Sample(sampState, input.uv);
 	float shininess = 32.0f; // Arbitrary surface shininess value
 

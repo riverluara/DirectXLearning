@@ -20,7 +20,7 @@ public:
 	ID3D11Buffer* GetMeshVertexBuffer();
 	ID3D11Buffer* GetMeshIndexBuffer();
 
-	void PrepareMaterial(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix);
+	void PrepareMaterial(std::string SamplerName, std::string SRVName, DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix);
 	void Draw(ID3D11DeviceContext* context);
 private:
 	Mesh* mesh;

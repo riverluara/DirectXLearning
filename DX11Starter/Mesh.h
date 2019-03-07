@@ -34,7 +34,7 @@ private:
 	void CreateBuffer(Vertex* vertices_1,
 		unsigned int* indices_1,
 		int numIndice_1, ID3D11Device* device);
-
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 
 	
 };
