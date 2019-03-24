@@ -49,7 +49,7 @@ Game::~Game()
 	// Delete our simple shader objects, which
 	// will clean up their own internal DirectX stuff
 	samplerState->Release();
-	clothSRV->Release();
+	rockSRV->Release();
 	delete gameEntity1;
 	delete gameEntity2;
 	//delete gameEntity3;
@@ -57,7 +57,7 @@ Game::~Game()
 	delete gameEntity5;
 	delete g1;
 	delete g2;
-	delete g3;
+	//delete g3;
 	delete camera1;
 
 	delete material1;
@@ -71,7 +71,7 @@ Game::~Game()
 void Game::Init()
 {
 	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
-	CreateWICTextureFromFile(device, context, L"../../Textures/rockNormal.jpg", 0, &rockNormalSRV);
+CreateWICTextureFromFile(device, context, L"../../Textures/rockNormal.jpg", 0, &rockNormalSRV);
 	// This sends data to GPU!!!
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -192,14 +192,14 @@ void Game::CreateBasicGeometry()
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in memory
 	//    over to a DirectX-controlled data structure (the vertex buffer)
-	Vertex vertices[] =
+	/*Vertex vertices[] =
 	{
 		{ XMFLOAT3(-1.0f, +1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(+1.0f, +1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(+1.0f, -1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(-1.0f, -1.0f, +0.0f), normal, uv },
 
-	};
+	};*/
 	// Set up the indices, which tell us which vertices to use and in which order
 	// - This is somewhat redundant for just 3 vertices (it's a simple example)
 	// - Indices are technically not required if the vertices are in the buffer 
@@ -207,29 +207,29 @@ void Game::CreateBasicGeometry()
 	// - But just to see how it's done...
 	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 	//Object2
-	Vertex vertices2[] = 
+	/*Vertex vertices2[] = 
 	{ 
 		{ XMFLOAT3(0.0f, +1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), normal, uv },
-	};
+	};*/
 	unsigned int indices2[] = { 0, 1, 2 };
 
 	
 	//Object3
-	Vertex vertices3[] =
+	/*Vertex vertices3[] =
 	{
 		{ XMFLOAT3(-2.0f, +1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(-0.5f, -1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(-3.5f, -1.0f, +0.0f), normal, uv },
 		{ XMFLOAT3(-2.0f, -1.5f, +0.0f), normal, uv },
-	};
+	};*/
 	unsigned int indices3[] = { 0, 1, 2, 1, 3, 2};
 	
 	//
-	material1 = new Material(vertexShader, pixelShader, rockSRV, samplerState);
+	material1 = new Material(vertexShader, pixelShader, rockSRV, rockNormalSRV, samplerState);
 	//material2 = new Material(vertexShader, pixelShader, rockNormalSRV, samplerState);
-	g1 = new Mesh("../../OBJ Files/cube.obj", device);
+	g1 = new Mesh("../../OBJ Files/sphere.obj", device);
 
 	gameEntity1 = new GameEntity(g1, material1);
 	gameEntity2 = new GameEntity(g1, material1);
@@ -237,7 +237,7 @@ void Game::CreateBasicGeometry()
 	g2 = new Mesh("../../OBJ Files/sphere.obj",device);
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
-	g3 = new Mesh(vertices3, 4, indices3, 6, device);
+	//g3 = new Mesh(vertices3, 4, indices3, 6, device);
 
 	camera1 = new Camera(width, height);
 	
@@ -268,10 +268,10 @@ void Game::Update(float deltaTime, float totalTime)
 	float sinTime = sin(totalTime * 2);
 	/*XMMATRIX trans = XMMatrixTranslation(0.0f, sinTime, 0.0f);
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(trans));*/
-	gameEntity1->Scale(1.0f, 1.0f, 1.0f);
+	/*gameEntity1->Scale(1.0f, 1.0f, 1.0f);
 	gameEntity1->Rotate(0.0f, 0.0f, totalTime * 2.0f);
 	gameEntity1->Move(sinTime, 0.0f, 1.0f);
-	
+	*/
 	gameEntity2->Move(0.0f, 0.0f, 3.0f);
 	gameEntity2->Scale(2.5f, 2.5f, 2.5f);
 	gameEntity2->Rotate(0.0f, 0.0f, totalTime * 2.0f + 60.0f);
@@ -316,7 +316,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	//Set Point Light
 	pixelShader->SetFloat3("PointLightPosition", XMFLOAT3(0, 5, 0));
 	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0.5, 0.5, 0.5));
-
+	pixelShader->SetFloat3("DirLightColor", XMFLOAT3(0.8f, 0.8f, 0.8f));
 	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); // Matches camera view definition above
 
 	
@@ -327,7 +327,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
 	
-	gameEntity1->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	gameEntity1->PrepareMaterial("sampState", "RockTexture", "NormalTexture", camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
@@ -340,53 +340,53 @@ void Game::Draw(float deltaTime, float totalTime)
 	//  - This is actually a complex process of copying data to a local buffer
 	//    and then copying that entire buffer to the GPU.  
 	//  - The "SimpleShader" class handles all of that for you.
-	gameEntity2->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	//gameEntity2->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
+	//// Set buffers in the input assembler
+	////  - Do this ONCE PER OBJECT you're drawing, since each object might
+	////    have different geometry.
 
-	gameEntity2->Draw(context);
-	//GameEntity3
-	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
-	//gameEntity3->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
-	
-	//gameEntity3->Draw(context);
+	//gameEntity2->Draw(context);
+	////GameEntity3
+	//// Send data to shader variables
+	////  - Do this ONCE PER OBJECT you're drawing
+	////  - This is actually a complex process of copying data to a local buffer
+	////    and then copying that entire buffer to the GPU.  
+	////  - The "SimpleShader" class handles all of that for you.
+	////gameEntity3->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	//// Set buffers in the input assembler
+	////  - Do this ONCE PER OBJECT you're drawing, since each object might
+	////    have different geometry.
+	//
+	////gameEntity3->Draw(context);
 
-		//GameEntity4
-	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
-	gameEntity4->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	//	//GameEntity4
+	//// Send data to shader variables
+	////  - Do this ONCE PER OBJECT you're drawing
+	////  - This is actually a complex process of copying data to a local buffer
+	////    and then copying that entire buffer to the GPU.  
+	////  - The "SimpleShader" class handles all of that for you.
+	//gameEntity4->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
-	
-	gameEntity4->Draw(context);
+	//// Set buffers in the input assembler
+	////  - Do this ONCE PER OBJECT you're drawing, since each object might
+	////    have different geometry.
+	//
+	//gameEntity4->Draw(context);
 
-	//GameEntity5
-	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
-	gameEntity5->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	////GameEntity5
+	//// Send data to shader variables
+	////  - Do this ONCE PER OBJECT you're drawing
+	////  - This is actually a complex process of copying data to a local buffer
+	////    and then copying that entire buffer to the GPU.  
+	////  - The "SimpleShader" class handles all of that for you.
+	//gameEntity5->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
-	
-	gameEntity5->Draw(context);
+	//// Set buffers in the input assembler
+	////  - Do this ONCE PER OBJECT you're drawing, since each object might
+	////    have different geometry.
+	//
+	//gameEntity5->Draw(context);
 
 	//
 

@@ -66,7 +66,7 @@ ID3D11Buffer* GameEntity::GetMeshIndexBuffer() {
 	return mesh->GetIndexBuffer();
 }
 
-void GameEntity::PrepareMaterial(std::string SamplerName, std::string SRVName, DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix) {
+void GameEntity::PrepareMaterial(std::string SamplerName, std::string SRVName, std::string NormalSRVName, DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projectionMatrix) {
 	DirectX::XMMATRIX w = DirectX::XMLoadFloat4x4(&worldMatrix);
 	DirectX::XMVECTOR d = DirectX::XMMatrixDeterminant(w);
 	DirectX::XMMATRIX world = DirectX::XMMatrixInverse(&d, w);
@@ -82,6 +82,8 @@ void GameEntity::PrepareMaterial(std::string SamplerName, std::string SRVName, D
 	material1->VertexShaderCopyAllBufferData();
 	material1->SetSamplerState(SamplerName);
 	material1->SetShaderResourceView(SRVName);
+	material1->SetShaderResourceNormalMapView(NormalSRVName);
+
 	material1->PixelShaderCopyAllBufferData(); // This sends data to GPU!!!
 	// Set the vertex and pixel shaders to use for the next Draw() command
 	//  - These don't technically need to be set every frame...YET

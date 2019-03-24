@@ -209,7 +209,7 @@ void Mesh::CreateBuffer(Vertex* vertices_1,
 	unsigned int* indices_1,
 	int numIndice_1, ID3D11Device* device) {
 	
-	CalculateTangents(vertices_1, numIndices, indices_1, numIndices);
+	CalculateTangents(vertices_1, numIndice_1, indices_1, numIndice_1);
 	D3D11_BUFFER_DESC vbd;
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
 	vbd.ByteWidth = sizeof(Vertex) * numIndice_1;       // 3 = number of vertices in the buffer
@@ -245,6 +245,7 @@ void Mesh::CreateBuffer(Vertex* vertices_1,
 	// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
 	device->CreateBuffer(&ibd, &initialIndexData1, &indexBuffer);
 }
+
 // Calculates the tangents of the vertices in a mesh
 // Code adapted from: http://www.terathon.com/code/tangent.html
 void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices)
@@ -303,6 +304,7 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 		v3->Tangent.z += tz;
 	}
 
+
 	// Ensure all of the tangents are orthogonal to the normals
 	for (int i = 0; i < numVerts; i++)
 	{
@@ -317,3 +319,4 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 		// Store the tangent
 		XMStoreFloat3(&verts[i].Tangent, tangent);
 	}
+}

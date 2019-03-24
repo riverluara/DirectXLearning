@@ -26,8 +26,8 @@ struct VertexShaderInput
 	//  |    |                |
 	//  v    v                v
 	float3 position		: POSITION;     // XYZ position
-	float3 normal       : NORMAL;      //Normal
 	float2 uv           : TEXCOORD;    //UV
+	float3 normal       : NORMAL;      //Normal
 	float3 tangent      : TANGENT;
 };
 
@@ -89,9 +89,10 @@ VertexToPixel main( VertexShaderInput input )
 	// - The values will be interpolated per-pixel by the rasterizer
 	// - We don't need to alter it here, but we do need to send it to the pixel shader
 	//output.color = input.color;
+	output.tangent = normalize(mul(input.tangent, (float3x3)transWorld));
 	output.uv = input.uv;
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
-	output.tangent = normalize(mul(input.tangent, transWorld));
+	
 	return output;
 }

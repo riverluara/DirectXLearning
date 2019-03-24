@@ -37,6 +37,7 @@ cbuffer dLightData : register(b0)
 {
 	DirectionaLight dLight1;
 	DirectionaLight dLight2;
+	float3 DirLightColor;
 	float3 PointLightPosition;
 	float3 PointLightColor;
 
@@ -53,19 +54,31 @@ float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 
 	return light.AmbientColor + (light.DiffuseColor * NdotL);
 }
-Texture2D SRview : register(t0);// Texture
+Texture2D RockTexture : register(t0);
+Texture2D NormalTexture : register(t1);
 SamplerState sampState : register(s0);//How you use  your texture
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-	input.tangent = normalize(input.normal);
+	input.tangent = normalize(input.tangent);
 
-	float3 normalMap = 
-	float4 surfaceColor = SRview.Sample(sampState, input.uv);
+	// Sample from the normal map (and UNPACK values)
+	float3 normalFromMap = NormalTexture.Sample(sampState, input.uv).rgb * 2 - 1;
+
+	// Create the matrix that will allow us to go from tangent space to world space
+	float3 N = input.normal;
+	float3 T = normalize(input.tangent - N * dot(input.tangent, N));
+	float3 B = cross(T, N);
+	float3x3 TBN = float3x3(T, B, N);
+
+	// Overwrite the initial normal with the version from the
+	// normal map, after we've converted to world space
+	input.normal = normalize(mul(normalFromMap, TBN));
+
+	
 	float shininess = 32.0f; // Arbitrary surface shininess value
 
 	float3 dirToCamera = normalize(CameraPosition - input.worldPos);
-
 
 	// POINT LIGHT //////////////////////////////////
 
@@ -84,16 +97,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 		/*surfaceColor **/ PointLightColor * pointNdotL
 		+ pointSpec.rrr; // Making the spec value into a float3
 
-
-	
-
-
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
-	
-    float4 lightColor1 = GetCalculateColors(input.normal, dLight1);
-	float4 lightColor2 = GetCalculateColors(input.normal, dLight2);
-	return surfaceColor* (lightColor1 + lightColor2 + float4(finalPointLight, 1.0f));
+	// Sample the texture
+	float4 textureColor = RockTexture.Sample(sampState, input.uv);
+	float4 light1 = GetCalculateColors(input.normal, dLight1);
+	return (light1 * textureColor+ float4(finalPointLight, 1.0f)*textureColor);													// Specular
 }
