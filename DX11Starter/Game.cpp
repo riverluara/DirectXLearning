@@ -71,7 +71,7 @@ Game::~Game()
 void Game::Init()
 {
 	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
-CreateWICTextureFromFile(device, context, L"../../Textures/rockNormal.jpg", 0, &rockNormalSRV);
+CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
 	// This sends data to GPU!!!
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
