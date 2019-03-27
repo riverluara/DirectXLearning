@@ -4,4 +4,4 @@
 >and basic lighting (direaction and point)
 
 **Stutas: Finish Normal Map, continue on Blending**
-![normalmap]:(https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.png)
+![normalmap]:(https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.PNG)
