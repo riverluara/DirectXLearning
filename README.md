@@ -5,4 +5,4 @@
 
 **Stutas: Finish Normal Map, continue on Blending**
 
-![normalmap]:(https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.PNG "normal map")
+![normalmap](https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.PNG "normal map")
