@@ -50,6 +50,7 @@ Game::~Game()
 	// will clean up their own internal DirectX stuff
 	samplerState->Release();
 	rockSRV->Release();
+	rockNormalSRV->Release();
 	delete gameEntity1;
 	delete gameEntity2;
 	//delete gameEntity3;
@@ -105,7 +106,32 @@ CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, 
 	
 	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
 	
+	//Add depth, so can render without blending
+	//Add rasterize desc, depth stencil desc, blend desc
+	//Add a column of balls , remeber to delete them
+	//No need to change pixel shader or vertex shader
+
 	
+	// Create a rasterizer description and then state
+	D3D11_RASTERIZER_DESC rd = {};
+	rd.CullMode = D3D11_CULL_NONE;
+	rd.FillMode = D3D11_FILL_SOLID;
+	device->CreateRasterizerState(&rd, &rasterState);
+	// Turn on the rasterizer state (note: this is usually done
+	// inside Draw() as necessary for each object, but we're doing
+	// it here cause it's a simple demo)
+	//context->RSSetState(rasterState);
+
+	// Depth state off?
+	D3D11_DEPTH_STENCIL_DESC ds = {};
+	ds.DepthEnable = false;
+	device->CreateDepthStencilState(&ds, &depthState);
+	// Create the blend state
+	D3D11_BLEND_DESC bd = {};
+	bd.RenderTarget[0].BlendEnable = true;
+	// Settings for blending RGB channels
+
+
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
