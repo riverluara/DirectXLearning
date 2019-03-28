@@ -3,6 +3,6 @@
 >Now I have basic game entities(with simple textures and meshes), basic camera movement(you can use W A S D X and Space),
 >and basic lighting (direaction and point)
 
-**Stutas: Finish Normal Map, continue on Blending**
+**Status: Finish Normal Map, continue on Blending**
 
 ![normalmap](https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.PNG "normal map")
