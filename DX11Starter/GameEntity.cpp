@@ -53,9 +53,9 @@ void GameEntity::Rotate(float x, float y, float z) {
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(scaling * rotation * translation));
 }
 
-DirectX::XMFLOAT4X4 GameEntity::GetWorldMatrix() {
+DirectX::XMFLOAT4X4* GameEntity::GetWorldMatrix() {
 	
-	return worldMatrix;
+	return &worldMatrix;
 }
 ID3D11Buffer* GameEntity::GetMeshVertexBuffer() {
 	return mesh->GetVertexBuffer();

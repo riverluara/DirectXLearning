@@ -70,6 +70,7 @@ private:
 	GameEntity* gameEntity3;
 	GameEntity* gameEntity4;
 	GameEntity* gameEntity5;
+	std::vector<GameEntity*> entities;
 
 	Camera *camera1;
 	Material* material1;

@@ -15,7 +15,7 @@ public:
 	void Scale(float x, float y, float z);
 	void Rotate(float x, float y, float z);
 	
-	DirectX::XMFLOAT4X4 GetWorldMatrix();
+	DirectX::XMFLOAT4X4* GetWorldMatrix();
 
 	ID3D11Buffer* GetMeshVertexBuffer();
 	ID3D11Buffer* GetMeshIndexBuffer();

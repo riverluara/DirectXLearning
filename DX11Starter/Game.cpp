@@ -51,7 +51,14 @@ Game::~Game()
 	samplerState->Release();
 	rockSRV->Release();
 	rockNormalSRV->Release();
+	depthState->Release();
+	blendState->Release();
+	rasterState->Release();
+	for (auto& e : entities) delete e;
+	
+	
 	delete gameEntity1;
+	
 	delete gameEntity2;
 	//delete gameEntity3;
 	delete gameEntity4;
@@ -60,7 +67,7 @@ Game::~Game()
 	delete g2;
 	//delete g3;
 	delete camera1;
-
+	
 	delete material1;
 	
 }
@@ -130,6 +137,23 @@ CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, 
 	D3D11_BLEND_DESC bd = {};
 	bd.RenderTarget[0].BlendEnable = true;
 	// Settings for blending RGB channels
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	// Settings for blending alpha channel
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	// Setting for masking out individual color channels
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	//Create the state
+	device->CreateBlendState(&bd, &blendState);
+
+	//Set the state
+	context->OMSetBlendState(blendState, 0, 0xFFFFFFFF);
 
 
 
@@ -264,7 +288,9 @@ void Game::CreateBasicGeometry()
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
 	//g3 = new Mesh(vertices3, 4, indices3, 6, device);
-
+	GameEntity* ge = new GameEntity(g1, material1);
+	//Add different game entities with different materials and meshes
+	entities.push_back(ge);
 	camera1 = new Camera(width, height);
 	
 }
@@ -354,12 +380,30 @@ void Game::Draw(float deltaTime, float totalTime)
 	//  - The "SimpleShader" class handles all of that for you.
 	
 	gameEntity1->PrepareMaterial("sampState", "RockTexture", "NormalTexture", camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	
+	// Draw multiple of the same object
+	for (int i = 0; i < 5; i++)
+	{
+		// Load, un-transpose, translate, re-transpose, store
+		XMMATRIX wMat = XMMatrixTranspose(XMLoadFloat4x4(gameEntity1->GetWorldMatrix()));
+		XMFLOAT4X4 w;
+		XMStoreFloat4x4(&w, XMMatrixTranspose(wMat * XMMatrixTranslation(i * 4.0f, 0, 0)));
 
+		// Changes per object
+		vertexShader->SetMatrix4x4("world", w);
+
+		// This is a little sloppy, but just for the demo, copy everything
+		vertexShader->CopyAllBufferData();
+
+		// Finally do the actual drawing
+		gameEntity1->Draw(context);
+	}
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
 	//    have different geometry.
-	gameEntity1->Draw(context);
+	
 
+	
 	//GameEntity2
 	// Send data to shader variables
 	//  - Do this ONCE PER OBJECT you're drawing
@@ -421,6 +465,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	////  - Puts the final frame we're drawing into the window so the user can see it
 	////  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
 	swapChain->Present(0, 0);
+	// Must re-bind after Present() due to swap chain options
+	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 	
 }
 
