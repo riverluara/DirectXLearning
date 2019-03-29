@@ -44,17 +44,23 @@ Game::~Game()
 {
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
-
+	if (vertexShader) {
+		delete vertexShader;
+	}
+	if (pixelShader) {
+		delete pixelShader;
+	}
 	
 	// Delete our simple shader objects, which
 	// will clean up their own internal DirectX stuff
 	samplerState->Release();
 	rockSRV->Release();
 	rockNormalSRV->Release();
+	fenceSRV->Release();
 	depthState->Release();
 	blendState->Release();
 	rasterState->Release();
-	for (auto& e : entities) delete e;
+	//for (auto& e : entities) delete e;
 	
 	
 	delete gameEntity1;
@@ -69,6 +75,7 @@ Game::~Game()
 	delete camera1;
 	
 	delete material1;
+	delete material2;
 	
 }
 
@@ -79,7 +86,8 @@ Game::~Game()
 void Game::Init()
 {
 	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
-CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
+    CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
+	CreateWICTextureFromFile(device, context, L"../../Textures/fence.png", 0, &fenceSRV);
 	// This sends data to GPU!!!
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -278,20 +286,24 @@ void Game::CreateBasicGeometry()
 	
 	//
 	material1 = new Material(vertexShader, pixelShader, rockSRV, rockNormalSRV, samplerState);
+	 material2 = new Material(vertexShader, pixelShader, fenceSRV, fenceSRV, samplerState);
 	//material2 = new Material(vertexShader, pixelShader, rockNormalSRV, samplerState);
 	g1 = new Mesh("../../OBJ Files/sphere.obj", device);
-
-	gameEntity1 = new GameEntity(g1, material1);
+	g2 = new Mesh("../../OBJ Files/cube.obj", device);
+	gameEntity1 = new GameEntity(g2, material2);
 	gameEntity2 = new GameEntity(g1, material1);
 	//gameEntity3 = new GameEntity(g1, material1);
-	g2 = new Mesh("../../OBJ Files/sphere.obj",device);
+	
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
 	//g3 = new Mesh(vertices3, 4, indices3, 6, device);
-	GameEntity* ge = new GameEntity(g1, material1);
+	//GameEntity* ge = new GameEntity(g1, material1);
+	//GameEntity* geFence = new GameEntity(g1, material2);
 	//Add different game entities with different materials and meshes
-	entities.push_back(ge);
+	//entities.push_back(ge);
+	//entities.push_back(geFence);
 	camera1 = new Camera(width, height);
+	
 	
 }
 

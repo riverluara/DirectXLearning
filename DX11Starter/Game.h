@@ -44,6 +44,7 @@ private:
 	ID3D11Buffer* indexBuffer;
 	ID3D11ShaderResourceView* rockSRV;
 	ID3D11ShaderResourceView* rockNormalSRV;
+	ID3D11ShaderResourceView* fenceSRV;
 	ID3D11SamplerState* samplerState;
 	ID3D11RasterizerState* rasterState;
 	ID3D11BlendState* blendState;

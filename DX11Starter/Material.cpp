@@ -9,8 +9,13 @@ Material::Material(SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D
 }
 Material::~Material() {
 	
-	delete vertexShader;
-	delete pixelShader;
+	//if (vertexShader) {
+	//	delete vertexShader;
+	//}
+	//if (pixelShader) {
+	//	delete pixelShader;
+	//}
+	
 
 }
 void Material::VertexShaderSetMatrices(DirectX::XMFLOAT4X4 world, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 projection, DirectX::XMFLOAT4X4 transWorld) {
