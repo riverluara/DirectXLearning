@@ -5,4 +5,4 @@
 
 **Status: Finish Normal Map, continue on Blending**
 
-![DepthBlend](https://github.com/riverluara/Learning/blob/Blending/Depth.PNG "Depth Blend")
+![AlphaClipping](https://github.com/riverluara/Learning/blob/Blending/AlphaClip.PNG "Alpha Clipping")
