@@ -5,4 +5,4 @@
 
 **Status: Finish Normal Map, continue on Blending**
 
-![normalmap](https://github.com/riverluara/Learning/blob/NormalMap/NormalMapping.PNG "normal map")
+![DepthBlend](https://github.com/riverluara/Learning/blob/Blending/Depth.PNG "Depth Blend")
