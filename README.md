@@ -5,6 +5,6 @@
 
 **Status: Finish Alpha Clipping, continue on PBR**
 >Normal Mapping
-![AlphaClipping](https://github.com/riverluara/Learning/blob/Blending/AlphaClip.PNG "Alpha Clipping")
+![NormalMapping](https://github.com/riverluara/Learning/blob/master/NormalMapping.PNG "Normal Mapping")
 >Alpha Clipping
 ![AlphaClipping](https://github.com/riverluara/Learning/blob/master/AlphaClip.PNG "Alpha Clipping")
