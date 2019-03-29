@@ -7,4 +7,4 @@
 >Normal Mapping
 ![AlphaClipping](https://github.com/riverluara/Learning/blob/Blending/AlphaClip.PNG "Alpha Clipping")
 >Alpha Clipping
-![AlphaClipping](https://github.com/riverluara/Learning/blob/Blending/AlphaClip.PNG "Alpha Clipping")
+![AlphaClipping](https://github.com/riverluara/Learning/blob/master/AlphaClip.PNG "Alpha Clipping")
