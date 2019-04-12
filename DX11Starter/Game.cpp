@@ -26,6 +26,10 @@ Game::Game(HINSTANCE hInstance)
 	indexBuffer = 0;
 	vertexShader = 0;
 	pixelShader = 0;
+	/*refractVS = 0;
+	refractPS = 0;
+	quadVS = 0;
+	quadPS = 0;*/
 
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
@@ -57,9 +61,9 @@ Game::~Game()
 	rockSRV->Release();
 	rockNormalSRV->Release();
 	fenceSRV->Release();
-	depthState->Release();
-	blendState->Release();
-	rasterState->Release();
+	//depthState->Release();
+	//blendState->Release();
+	//rasterState->Release();
 	//for (auto& e : entities) delete e;
 	
 	
@@ -85,19 +89,19 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
+
 	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
-    CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
-	CreateWICTextureFromFile(device, context, L"../../Textures/fence.png", 0, &fenceSRV);
-	// This sends data to GPU!!!
+	CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
+	CreateWICTextureFromFile(device, context, L"../../Textures/IceTexture.png", 0, &fenceSRV);
+
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	sampDesc.MaxAnisotropy = 16;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&sampDesc, &samplerState);
-
-
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -105,18 +109,12 @@ void Game::Init()
 	CreateMatrices();
 	CreateBasicGeometry();
 
-	dLight1.AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-	dLight1.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-	dLight1.Direction = { 1.0f, -1.0f, 0.0f };
+	// This sends data to GPU!!!
 	
-	pixelShader->SetData("dLight1", &dLight1, sizeof(DirectionaLight));
-	//pixelShader->CopyAllBufferData();
 
-	dLight2.AmbientColor = { 0.1f, 0.1f, 0.5f, 1.0f };
-	dLight2.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-	dLight2.Direction = { -0.50f, 1.0f, 0.0f };
-	pixelShader->SetData("dLight2", &dLight2, sizeof(DirectionaLight));
-	//pixelShader->CopyAllBufferData();
+
+
+	
 
 	
 	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
@@ -128,40 +126,94 @@ void Game::Init()
 
 	
 	// Create a rasterizer description and then state
-	D3D11_RASTERIZER_DESC rd = {};
-	rd.CullMode = D3D11_CULL_NONE;
-	rd.FillMode = D3D11_FILL_SOLID;
-	device->CreateRasterizerState(&rd, &rasterState);
+	//D3D11_RASTERIZER_DESC rd = {};
+	////rasterize state for drawing inside
+	//rd.CullMode = D3D11_CULL_FRONT;
+	//rd.FillMode = D3D11_FILL_SOLID;
+	//rd.DepthClipEnable = true;
+	//device->CreateRasterizerState(&rd, &rasterState);
 	// Turn on the rasterizer state (note: this is usually done
 	// inside Draw() as necessary for each object, but we're doing
 	// it here cause it's a simple demo)
 	//context->RSSetState(rasterState);
 
 	// Depth state off?
-	D3D11_DEPTH_STENCIL_DESC ds = {};
-	ds.DepthEnable = false;
-	device->CreateDepthStencilState(&ds, &depthState);
-	// Create the blend state
-	D3D11_BLEND_DESC bd = {};
-	bd.RenderTarget[0].BlendEnable = true;
-	// Settings for blending RGB channels
-	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	//Depth state for accepting pixels with depth equal to existing depth
+	/*D3D11_DEPTH_STENCIL_DESC ds = {};
+	ds.DepthEnable = true;
+	ds.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	device->CreateDepthStencilState(&ds, &depthState);*/
 
-	// Settings for blending alpha channel
-	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	//Refraction setup
+	ID3D11Texture2D* refractionRenderTexture;
 
-	// Setting for masking out individual color channels
-	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	//Set up render texture
+	D3D11_TEXTURE2D_DESC rtDesc = {};
+	rtDesc.Width = width;
+	rtDesc.Height = height;
+	rtDesc.MipLevels = 1;
+	rtDesc.ArraySize = 1;
+	rtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	rtDesc.Usage = D3D11_USAGE_DEFAULT;
+	rtDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	rtDesc.CPUAccessFlags = 0;
+	rtDesc.MiscFlags = 0;
+	rtDesc.SampleDesc.Count = 1;
+	rtDesc.SampleDesc.Quality = 0;
+	device->CreateTexture2D(&rtDesc, 0, &refractionRenderTexture);
+	// Set up render target view
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = rtDesc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	device->CreateRenderTargetView(refractionRenderTexture, &rtvDesc, &refractionRTV);
+	// Set up shader resource view for same texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = rtDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	device->CreateShaderResourceView(refractionRenderTexture, &srvDesc, &refractionSRV);
 
-	//Create the state
-	device->CreateBlendState(&bd, &blendState);
+	// All done with this texture ref
+	refractionRenderTexture->Release();
+	// Set up a sampler that uses clamp addressing
+	// for use when doing refration - this is useful so 
+	// that we don't wrap the refraction from the other
+	// side of the screen
+	D3D11_SAMPLER_DESC rSamp = {};
+	rSamp.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	rSamp.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	rSamp.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	rSamp.Filter = D3D11_FILTER_ANISOTROPIC;
+	rSamp.MaxAnisotropy = 16;
+	rSamp.MaxLOD = D3D11_FLOAT32_MAX;
 
-	//Set the state
-	context->OMSetBlendState(blendState, 0, 0xFFFFFFFF);
+	// Ask DirectX for the actual object
+	device->CreateSamplerState(&rSamp, &refractSampler);
+
+
+	//// Create the blend state
+	//D3D11_BLEND_DESC bd = {};
+	//bd.RenderTarget[0].BlendEnable = true;
+	//// Settings for blending RGB channels
+	//bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	//bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	//bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	//// Settings for blending alpha channel
+	//bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	//bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	//bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	//// Setting for masking out individual color channels
+	//bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	////Create the state
+	//device->CreateBlendState(&bd, &blendState);
+
+	////Set the state
+	//context->OMSetBlendState(blendState, 0, 0xFFFFFFFF);
 
 
 
@@ -184,6 +236,18 @@ void Game::LoadShaders()
 
 	pixelShader = new SimplePixelShader(device, context);
 	pixelShader->LoadShaderFile(L"PixelShader.cso");
+	// Refraction shaders
+	quadVS = new SimpleVertexShader(device, context);
+	quadVS->LoadShaderFile(L"FullscreenQuadVS.cso");
+
+	quadPS = new SimplePixelShader(device, context);
+	quadPS->LoadShaderFile(L"FullscreenQuadPS.cso");
+
+	refractVS = new SimpleVertexShader(device, context);
+	refractVS->LoadShaderFile(L"RefractVS.cso");
+
+	refractPS = new SimplePixelShader(device, context);
+	refractPS->LoadShaderFile(L"RefractPS.cso");
 }
 
 
@@ -238,64 +302,22 @@ void Game::CreateMatrices()
 
 void Game::CreateBasicGeometry()
 {
-	// Create some temporary variables to represent colors
-	// - Not necessary, just makes things more readable
-	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-
-	XMFLOAT3 normal = { 0.0f, 0.0f, -1.0f };
-	XMFLOAT2 uv = {0.0f, 0.0f};
-
-	// Set up the vertices of the triangle we would like to draw
-	// - We're going to copy this array, exactly as it exists in memory
-	//    over to a DirectX-controlled data structure (the vertex buffer)
-	/*Vertex vertices[] =
-	{
-		{ XMFLOAT3(-1.0f, +1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(+1.0f, +1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(+1.0f, -1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(-1.0f, -1.0f, +0.0f), normal, uv },
-
-	};*/
-	// Set up the indices, which tell us which vertices to use and in which order
-	// - This is somewhat redundant for just 3 vertices (it's a simple example)
-	// - Indices are technically not required if the vertices are in the buffer 
-	//    in the correct order and each one will be used exactly once
-	// - But just to see how it's done...
-	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
-	//Object2
-	/*Vertex vertices2[] = 
-	{ 
-		{ XMFLOAT3(0.0f, +1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), normal, uv },
-	};*/
-	unsigned int indices2[] = { 0, 1, 2 };
-
 	
-	//Object3
-	/*Vertex vertices3[] =
-	{
-		{ XMFLOAT3(-2.0f, +1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(-0.5f, -1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(-3.5f, -1.0f, +0.0f), normal, uv },
-		{ XMFLOAT3(-2.0f, -1.5f, +0.0f), normal, uv },
-	};*/
-	unsigned int indices3[] = { 0, 1, 2, 1, 3, 2};
 	
 	//
 	material1 = new Material(vertexShader, pixelShader, rockSRV, rockNormalSRV, samplerState);
 	 material2 = new Material(vertexShader, pixelShader, fenceSRV, fenceSRV, samplerState);
+	 refractionMaterial = new Material(refractVS, refractPS, refractionSRV, refractionSRV, refractSampler);
 	//material2 = new Material(vertexShader, pixelShader, rockNormalSRV, samplerState);
 	g1 = new Mesh("../../OBJ Files/sphere.obj", device);
 	g2 = new Mesh("../../OBJ Files/cube.obj", device);
-	gameEntity1 = new GameEntity(g2, material2);
+	gameEntity1 = new GameEntity(g1, material1);
 	gameEntity2 = new GameEntity(g1, material1);
 	//gameEntity3 = new GameEntity(g1, material1);
 	
 	gameEntity4 = new GameEntity(g2, material1);
 	gameEntity5 = new GameEntity(g2, material1);
+	refractionEntity = new GameEntity(g1,refractionMaterial);
 	//g3 = new Mesh(vertices3, 4, indices3, 6, device);
 	//GameEntity* ge = new GameEntity(g1, material1);
 	//GameEntity* geFence = new GameEntity(g1, material2);
@@ -359,39 +381,27 @@ void Game::Update(float deltaTime, float totalTime)
 
 
 }
+void Game::DrawScene() {
+	
+	dLight1.AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+	dLight1.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	dLight1.Direction = { 1.0f, -1.0f, 0.0f };
 
-// --------------------------------------------------------
-// Clear the screen, redraw everything, present to the user
-// --------------------------------------------------------
-void Game::Draw(float deltaTime, float totalTime)
-{
-	// Background color (Cornflower Blue in this case) for clearing
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	pixelShader->SetData("dLight1", &dLight1, sizeof(DirectionaLight));
+	//pixelShader->CopyAllBufferData();
 
-	// Clear the render target and depth buffer (erases what's on the screen)
-	//  - Do this ONCE PER FRAME
-	//  - At the beginning of Draw (before drawing *anything*)
-	context->ClearRenderTargetView(backBufferRTV, color);
-	context->ClearDepthStencilView(
-		depthStencilView,
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
+	dLight2.AmbientColor = { 0.1f, 0.1f, 0.5f, 1.0f };
+	dLight2.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	dLight2.Direction = { -0.50f, 1.0f, 0.0f };
+	pixelShader->SetData("dLight2", &dLight2, sizeof(DirectionaLight));
+	//pixelShader->CopyAllBufferData();
 	//Set Point Light
 	pixelShader->SetFloat3("PointLightPosition", XMFLOAT3(0, 5, 0));
 	pixelShader->SetFloat3("PointLightColor", XMFLOAT3(0.5, 0.5, 0.5));
 	pixelShader->SetFloat3("DirLightColor", XMFLOAT3(0.8f, 0.8f, 0.8f));
-	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); // Matches camera view definition above
-
-	
-	//GameEntity1
-	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
-	
-	gameEntity1->PrepareMaterial("sampState", "RockTexture", "NormalTexture", camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	pixelShader->SetFloat3("CameraPosition", camera1->GetCameraPosition()); 
+	pixelShader->CopyAllBufferData() ;// Matches camera view definition above
+	gameEntity1->PrepareMaterial("sampState", "DiffuseTexture", "NormalTexture", camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
 	
 	// Draw multiple of the same object
 	for (int i = 0; i < 5; i++)
@@ -399,79 +409,106 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Load, un-transpose, translate, re-transpose, store
 		XMMATRIX wMat = XMMatrixTranspose(XMLoadFloat4x4(gameEntity1->GetWorldMatrix()));
 		XMFLOAT4X4 w;
-		XMStoreFloat4x4(&w, XMMatrixTranspose(wMat * XMMatrixTranslation(i * 4.0f, 0, 0)));
+		XMStoreFloat4x4(&w, XMMatrixTranspose(wMat * XMMatrixTranslation(i * (-1.0f), 0, 0)));
 
 		// Changes per object
 		vertexShader->SetMatrix4x4("world", w);
 
 		// This is a little sloppy, but just for the demo, copy everything
 		vertexShader->CopyAllBufferData();
-
 		// Finally do the actual drawing
 		gameEntity1->Draw(context);
 	}
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
-	
+}
+void Game::DrawFullscreenQuad(ID3D11ShaderResourceView* texture) {
+	// First, turn off our buffers, as we'll be generating the vertex
+	// data on the fly in a special vertex shader using the index of each vert
+	context->IASetVertexBuffers(0, 0, 0, 0, 0);
+	context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+	// Set up the fullscreen quad shaders
+	quadVS->SetShader();
+
+	quadPS->SetShaderResourceView("Pixels", texture);
+	quadPS->SetSamplerState("Sampler", samplerState);
+	quadPS->SetShader();
+
+	// Draw
+	context->Draw(3, 0);
+}
+void Game::DrawRefraction() {
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vb = refractionEntity->GetMeshVertexBuffer();
+	ID3D11Buffer* ib = refractionEntity->GetMeshIndexBuffer();
+	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+
+	// Setup vertex shader
+	XMMATRIX wMat = XMMatrixTranspose(XMLoadFloat4x4(refractionEntity->GetWorldMatrix()));
+	XMFLOAT4X4 w;
+	XMStoreFloat4x4(&w, XMMatrixTranspose(wMat * XMMatrixTranslation(-0.5f, 0, -1.0f)));
 
 	
-	//GameEntity2
-	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
-	//gameEntity2->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	refractVS->SetMatrix4x4("world", w);
+	refractVS->SetMatrix4x4("view", camera1->GetViewMatrix());
+	refractVS->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
+	refractVS->CopyAllBufferData();
+	refractVS->SetShader();
 
-	//// Set buffers in the input assembler
-	////  - Do this ONCE PER OBJECT you're drawing, since each object might
-	////    have different geometry.
+	// Setup pixel shader
+	refractPS->SetShaderResourceView("ScenePixels", refractionSRV);	// Pixels of the screen
+	refractPS->SetShaderResourceView("NormalMap", rockNormalSRV);	// Normal map for the object itself
+	refractPS->SetSamplerState("BasicSampler", samplerState);			// Sampler for the normal map
+	refractPS->SetSamplerState("RefractSampler", refractSampler);	// Uses CLAMP on the edges
+	refractPS->SetFloat3("CameraPosition", camera1->GetCameraPosition());
+	refractPS->SetMatrix4x4("view", camera1->GetViewMatrix());				// View matrix, so we can put normals into view space
+	refractPS->CopyAllBufferData();
+	refractPS->SetShader();
 
-	//gameEntity2->Draw(context);
-	////GameEntity3
-	//// Send data to shader variables
-	////  - Do this ONCE PER OBJECT you're drawing
-	////  - This is actually a complex process of copying data to a local buffer
-	////    and then copying that entire buffer to the GPU.  
-	////  - The "SimpleShader" class handles all of that for you.
-	////gameEntity3->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
-	//// Set buffers in the input assembler
-	////  - Do this ONCE PER OBJECT you're drawing, since each object might
-	////    have different geometry.
-	//
-	////gameEntity3->Draw(context);
+	// Finally do the actual drawing
+	refractionEntity->Draw(context);
+}
+// --------------------------------------------------------
+// Clear the screen, redraw everything, present to the user
+// --------------------------------------------------------
+void Game::Draw(float deltaTime, float totalTime)
+{
+	
+	// Background color (black in this case) for clearing
+	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
-	//	//GameEntity4
-	//// Send data to shader variables
-	////  - Do this ONCE PER OBJECT you're drawing
-	////  - This is actually a complex process of copying data to a local buffer
-	////    and then copying that entire buffer to the GPU.  
-	////  - The "SimpleShader" class handles all of that for you.
-	//gameEntity4->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	// Clear any and all render targets we intend to use, and the depth buffer
+	context->ClearRenderTargetView(backBufferRTV, color);
+	context->ClearRenderTargetView(refractionRTV, color);
+	context->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	
+	// Use our refraction render target and our regular depth buffer
+	context->OMSetRenderTargets(1, &refractionRTV, depthStencilView);
 
-	//// Set buffers in the input assembler
-	////  - Do this ONCE PER OBJECT you're drawing, since each object might
-	////    have different geometry.
-	//
-	//gameEntity4->Draw(context);
+	//// Draw the scene (WITHOUT the refracting object)
+	DrawScene();
+	// Back to the screen, but NO depth buffer for now!
+	// We just need to plaster the pixels from the render target onto the 
+	// screen without affecting (or respecting) the existing depth buffer
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
 
-	////GameEntity5
-	//// Send data to shader variables
-	////  - Do this ONCE PER OBJECT you're drawing
-	////  - This is actually a complex process of copying data to a local buffer
-	////    and then copying that entire buffer to the GPU.  
-	////  - The "SimpleShader" class handles all of that for you.
-	//gameEntity5->PrepareMaterial(camera1->GetViewMatrix(), camera1->GetProjectionMatrix());
+	// Draw a fullscreen quad with our render target texture (so the user can see
+	// what we've drawn so far).  
+	DrawFullscreenQuad(refractionSRV);
 
-	//// Set buffers in the input assembler
-	////  - Do this ONCE PER OBJECT you're drawing, since each object might
-	////    have different geometry.
-	//
-	//gameEntity5->Draw(context);
-
-	//
-
+	// Turn the depth buffer back on, so we can still
+	// used the depths from our earlier scene render
+	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	
+	// Draw the refraction object
+	DrawRefraction();
+	
+	
+	// Unbind all textures at the end of the frame
+	// This is a good idea any time we're using extra render targets
+	// that we intend to sample from on the next frame
+	ID3D11ShaderResourceView* nullSRV[16] = {};
+	context->PSSetShaderResources(0, 16, nullSRV);
 
 	//// Present the back buffer to the user
 	////  - Puts the final frame we're drawing into the window so the user can see it

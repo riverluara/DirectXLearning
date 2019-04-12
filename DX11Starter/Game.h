@@ -22,7 +22,9 @@ public:
 	void OnResize();
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
-
+	void DrawScene();
+	void DrawFullscreenQuad(ID3D11ShaderResourceView* texture);
+	void DrawRefraction();
 	// Overridden mouse input helper methods
 	void OnMouseDown (WPARAM buttonState, int x, int y);
 	void OnMouseUp	 (WPARAM buttonState, int x, int y);
@@ -52,7 +54,17 @@ private:
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
-
+	// Refraction stuff ------------------------
+	// Render target view and SRV so we can render somewhere
+	// other than the screen - necessary for refracting things
+	// that are already drawn
+	ID3D11SamplerState* refractSampler;
+	ID3D11RenderTargetView* refractionRTV;
+	ID3D11ShaderResourceView* refractionSRV;
+	SimpleVertexShader* refractVS;
+	SimplePixelShader* refractPS;
+	SimpleVertexShader* quadVS;
+	SimplePixelShader* quadPS;
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 viewMatrix;
@@ -72,10 +84,11 @@ private:
 	GameEntity* gameEntity4;
 	GameEntity* gameEntity5;
 	std::vector<GameEntity*> entities;
-
+	GameEntity* refractionEntity;
 	Camera *camera1;
 	Material* material1;
 	Material* material2;
+	Material* refractionMaterial;
 	DirectionaLight dLight1;
 	DirectionaLight dLight2;
 	

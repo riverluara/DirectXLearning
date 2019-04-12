@@ -54,35 +54,40 @@ float4 GetCalculateColors(float3 normal, DirectionaLight light) {
 
 	return light.AmbientColor + (light.DiffuseColor * NdotL);
 }
-Texture2D RockTexture : register(t0);
+Texture2D DiffuseTexture : register(t0);
 Texture2D NormalTexture : register(t1);
 SamplerState sampState : register(s0);//How you use  your texture
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-	//input.tangent = normalize(input.tangent);
+	input.tangent = normalize(input.tangent);
 
-	//// Sample from the normal map (and UNPACK values)
-	//float3 normalFromMap = NormalTexture.Sample(sampState, input.uv).rgb * 2 - 1;
+	// Sample from the normal map (and UNPACK values)
+	float3 normalFromMap = NormalTexture.Sample(sampState, input.uv).rgb * 2 - 1;
 
-	//// Create the matrix that will allow us to go from tangent space to world space
-	//float3 N = input.normal;
-	//float3 T = normalize(input.tangent - N * dot(input.tangent, N));
-	//float3 B = cross(T, N);
-	//float3x3 TBN = float3x3(T, B, N);
+	// Create the matrix that will allow us to go from tangent space to world space
+	float3 N = input.normal;
+	float3 T = normalize(input.tangent - N * dot(input.tangent, N));
+	float3 B = cross(T, N);
+	float3x3 TBN = float3x3(T, B, N);
 
-	//// Overwrite the initial normal with the version from the
-	//// normal map, after we've converted to world space
-	//input.normal = normalize(mul(normalFromMap, TBN));
-
+	// Overwrite the initial normal with the version from the
+	// normal map, after we've converted to world space
+	input.normal = normalize(mul(normalFromMap, TBN));
 	
-	float shininess = 32.0f; // Arbitrary surface shininess value
-
+	//Calculate the opacity
 	float3 dirToCamera = normalize(CameraPosition - input.worldPos);
-
+	float edgeFactor = abs(dot(dirToCamera, input.normal));
+	float oneMinusEdge = 1.0 - edgeFactor;
+	// Sample the texture
+	float4 textureColor = DiffuseTexture.Sample(sampState, input.uv);
+	float3 rgb = textureColor.rgb;
+	float opacity = min(1.0f, oneMinusEdge);
+	
 	// POINT LIGHT //////////////////////////////////
 
 	// Direction TO the point light from the surface
+	float shininess = 32.0f; // Arbitrary surface shininess value
 	float3 dirToPointLight = normalize(PointLightPosition - input.worldPos);
 
 	float3 pointNdotL = dot(input.normal, dirToPointLight);
@@ -93,15 +98,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float pointSpec = pow(saturate(dot(pointRefl, dirToCamera)), shininess);
 
 	// Combine the surface and lighting
-	float3 finalPointLight =
-		/*surfaceColor **/ PointLightColor * pointNdotL
-		+ pointSpec.rrr; // Making the spec value into a float3
-
-	// Sample the texture
-	float4 textureColor = RockTexture.Sample(sampState, input.uv);
+	float3 finalPointLight = PointLightColor * pointNdotL+ pointSpec.rrr;
+		/*surfaceColor **/
+		
+	// Making the spec value into a float3
+	
+	
 	// Check the alpha value and discard if necessary
-	if (textureColor.a < 0.2f)
-		discard;
+	/*if (textureColor.a < 0.2f)
+		discard;*/
 	float4 light1 = GetCalculateColors(input.normal, dLight1);
-	return (light1 * textureColor+ float4(finalPointLight, 1.0f)*textureColor);													// Specular
+	return (light1 * textureColor + float4(finalPointLight, 1.0f)*textureColor);													// Specular
 }
