@@ -4,5 +4,7 @@
 >and basic lighting (direaction and point)
 
 **Status: Finish Refraction, work on Particle**
+>NormalMap
+![NormalMap](https://github.com/riverluara/Learning/blob/master/NormalMapping.PNG "NormalMap")
 >Refraction
 ![Refraction](https://github.com/riverluara/Learning/blob/Refraction/Refraction.PNG "Refraction")
