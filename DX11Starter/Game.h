@@ -8,6 +8,8 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Lights.h"
+#include "Emitter.h"
+
 class Game 
 	: public DXCore
 {
@@ -22,7 +24,7 @@ public:
 	void OnResize();
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
-	void DrawScene();
+	void DrawScene(float totalTime);
 	void DrawFullscreenQuad(ID3D11ShaderResourceView* texture);
 	void DrawRefraction();
 	// Overridden mouse input helper methods
@@ -49,7 +51,7 @@ private:
 	ID3D11ShaderResourceView* fenceSRV;
 	ID3D11SamplerState* samplerState;
 	ID3D11RasterizerState* rasterState;
-	ID3D11BlendState* blendState;
+	ID3D11BlendState* rfBlendState;
 	ID3D11DepthStencilState* depthState;
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
@@ -65,6 +67,15 @@ private:
 	SimplePixelShader* refractPS;
 	SimpleVertexShader* quadVS;
 	SimplePixelShader* quadPS;
+	//Emitter stuff
+	// Particle stuff
+	ID3D11ShaderResourceView* particleTexture;
+	SimpleVertexShader* particleVS;
+	SimplePixelShader* particlePS;
+	ID3D11DepthStencilState* particleDepthState;
+	ID3D11BlendState* particleBlendState;
+	ID3D11RasterizerState* particleDebugRasterState;
+	Emitter* emitter;
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 viewMatrix;

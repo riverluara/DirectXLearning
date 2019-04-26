@@ -93,7 +93,7 @@ void Game::Init()
 	CreateWICTextureFromFile(device, context, L"../../Textures/rock.jpg", 0, &rockSRV);
 	CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
 	CreateWICTextureFromFile(device, context, L"../../Textures/IceTexture.png", 0, &fenceSRV);
-
+	CreateWICTextureFromFile(device, context, L"../../Textures/multiplesnow.png", 0, &particleTexture);
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -125,24 +125,54 @@ void Game::Init()
 	//No need to change pixel shader or vertex shader
 
 	
-	// Create a rasterizer description and then state
-	//D3D11_RASTERIZER_DESC rd = {};
-	////rasterize state for drawing inside
-	//rd.CullMode = D3D11_CULL_FRONT;
-	//rd.FillMode = D3D11_FILL_SOLID;
-	//rd.DepthClipEnable = true;
-	//device->CreateRasterizerState(&rd, &rasterState);
-	// Turn on the rasterizer state (note: this is usually done
-	// inside Draw() as necessary for each object, but we're doing
-	// it here cause it's a simple demo)
-	//context->RSSetState(rasterState);
 
-	// Depth state off?
-	//Depth state for accepting pixels with depth equal to existing depth
-	/*D3D11_DEPTH_STENCIL_DESC ds = {};
-	ds.DepthEnable = true;
-	ds.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	device->CreateDepthStencilState(&ds, &depthState);*/
+	// A depth state for the particles
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Turns off depth writing
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	device->CreateDepthStencilState(&dsDesc, &particleDepthState);
+
+	//// Blend for particles (additive)
+	D3D11_BLEND_DESC blend = {};
+	blend.AlphaToCoverageEnable = false;
+	blend.IndependentBlendEnable = false;
+	blend.RenderTarget[0].BlendEnable = true;
+	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // Still respect pixel shader output alpha
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	device->CreateBlendState(&blend, &particleBlendState);
+
+	
+	// Debug rasterizer state for particles
+	D3D11_RASTERIZER_DESC rd = {};
+	rd.CullMode = D3D11_CULL_BACK;
+	rd.DepthClipEnable = true;
+	rd.FillMode = D3D11_FILL_WIREFRAME;
+	device->CreateRasterizerState(&rd, &particleDebugRasterState);
+
+	emitter = new Emitter(
+		200,							// Max particles
+		30,								// Particles per second
+		3,								// Particle lifetime
+		0.75f,							// Start size
+		0.5f,							// End size
+		XMFLOAT4(0.8f, 0.8f, 0.8f, 0.3f),// Start color
+		XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f),// End color
+		XMFLOAT3(0, -2.0f, 0),				// Start velocity
+		XMFLOAT3(0.5f, 0.1f, 0.1f),		// Velocity randomness range
+		XMFLOAT3(-2.5f, 2.0f, 0.0),			// Emitter position
+		XMFLOAT3(6, 0, 0),				// Position randomness range
+		XMFLOAT4(0, 0, -3, 3),			// Random rotation ranges (startMin, startMax, endMin, endMax)
+		XMFLOAT3(0, -1, 0),				// Constant acceleration
+		device,
+		particleVS,
+		particlePS,
+		particleTexture);
 
 	//Refraction setup
 	ID3D11Texture2D* refractionRenderTexture;
@@ -192,28 +222,25 @@ void Game::Init()
 	// Ask DirectX for the actual object
 	device->CreateSamplerState(&rSamp, &refractSampler);
 
+	D3D11_BLEND_DESC bd = {};
+	bd.RenderTarget[0].BlendEnable = true;
 
-	//// Create the blend state
-	//D3D11_BLEND_DESC bd = {};
-	//bd.RenderTarget[0].BlendEnable = true;
-	//// Settings for blending RGB channels
-	//bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	//bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	//bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	// Settings for blending RGB channels
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 
-	//// Settings for blending alpha channel
-	//bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	//bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-	//bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	// Settings for blending alpha channel
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 
-	//// Setting for masking out individual color channels
-	//bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	// Setting for masking out individual color channels
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-	////Create the state
-	//device->CreateBlendState(&bd, &blendState);
+	// Create the state
+	device->CreateBlendState(&bd, &rfBlendState);
 
-	////Set the state
-	//context->OMSetBlendState(blendState, 0, 0xFFFFFFFF);
 
 
 
@@ -248,6 +275,12 @@ void Game::LoadShaders()
 
 	refractPS = new SimplePixelShader(device, context);
 	refractPS->LoadShaderFile(L"RefractPS.cso");
+
+	particleVS = new SimpleVertexShader(device, context);
+	particleVS->LoadShaderFile(L"ParticleVS.cso");
+
+	particlePS = new SimplePixelShader(device, context);
+	particlePS->LoadShaderFile(L"ParticlePS.cso");
 }
 
 
@@ -352,6 +385,7 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 	float sinTime = sin(totalTime * 2);
+	emitter->Update(deltaTime, totalTime);
 	/*XMMATRIX trans = XMMatrixTranslation(0.0f, sinTime, 0.0f);
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(trans));*/
 	/*gameEntity1->Scale(1.0f, 1.0f, 1.0f);
@@ -374,14 +408,14 @@ void Game::Update(float deltaTime, float totalTime)
 	//gameEntity5->Scale(0.5f, 0.5f, 1.0f);
 	gameEntity5->Move(2.8f * sinTime, 0.0f, -1.0f);
 	//gameEntity5->Scale(0.75f * sinTime + 0.75f, 0.75f * sinTime + 0.75f, 1.0f);
-
+	refractionEntity->Move( sinTime, 0.0f, -1.0f);
 	camera1->Update(deltaTime);
 	
 	
 
 
 }
-void Game::DrawScene() {
+void Game::DrawScene(float totalTime) {
 	
 	dLight1.AmbientColor = { 0.1f, 0.1f, 0.1f, 1.0f };
 	dLight1.DiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -419,6 +453,8 @@ void Game::DrawScene() {
 		// Finally do the actual drawing
 		gameEntity1->Draw(context);
 	}
+	// Particle states
+	
 }
 void Game::DrawFullscreenQuad(ID3D11ShaderResourceView* texture) {
 	// First, turn off our buffers, as we'll be generating the vertex
@@ -486,7 +522,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->OMSetRenderTargets(1, &refractionRTV, depthStencilView);
 
 	//// Draw the scene (WITHOUT the refracting object)
-	DrawScene();
+	DrawScene(totalTime);
+	
 	// Back to the screen, but NO depth buffer for now!
 	// We just need to plaster the pixels from the render target onto the 
 	// screen without affecting (or respecting) the existing depth buffer
@@ -499,7 +536,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Turn the depth buffer back on, so we can still
 	// used the depths from our earlier scene render
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
-	
+	context->OMSetBlendState(rfBlendState, 0, 0xFFFFFFFF);
 	// Draw the refraction object
 	DrawRefraction();
 	
@@ -510,6 +547,19 @@ void Game::Draw(float deltaTime, float totalTime)
 	ID3D11ShaderResourceView* nullSRV[16] = {};
 	context->PSSetShaderResources(0, 16, nullSRV);
 
+	float blend[4] = { 1,1,1,1 };
+	context->OMSetBlendState(particleBlendState, blend, 0xffffffff);	// Additive blending
+	context->OMSetDepthStencilState(particleDepthState, 0);				// No depth WRITING
+
+	// No wireframe debug
+	particlePS->SetInt("debugWireframe", 0);
+	particlePS->CopyAllBufferData();
+
+	// Draw the emitter
+	emitter->Draw(context, camera1, totalTime);
+	context->OMSetBlendState(0, blend, 0xffffffff);
+	context->OMSetDepthStencilState(0, 0);
+	context->RSSetState(0);
 	//// Present the back buffer to the user
 	////  - Puts the final frame we're drawing into the window so the user can see it
 	////  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
