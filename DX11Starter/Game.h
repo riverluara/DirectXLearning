@@ -28,6 +28,7 @@ public:
 	void DrawParticles(float totalTime);
 	void DrawFullscreenQuad(ID3D11ShaderResourceView* texture);
 	void DrawRefraction();
+	void DrawSky();
 	// Overridden mouse input helper methods
 	void OnMouseDown (WPARAM buttonState, int x, int y);
 	void OnMouseUp	 (WPARAM buttonState, int x, int y);
@@ -77,6 +78,13 @@ private:
 	ID3D11BlendState* particleBlendState;
 	ID3D11RasterizerState* particleDebugRasterState;
 	Emitter* emitter;
+
+	//Skybox
+	ID3D11ShaderResourceView* skySRV;
+	SimpleVertexShader* skyVS;
+	SimplePixelShader* skyPS;
+	ID3D11RasterizerState* skyRasterState;
+	ID3D11DepthStencilState* skyDepthState;
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 viewMatrix;

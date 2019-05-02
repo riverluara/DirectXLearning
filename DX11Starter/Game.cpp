@@ -1,7 +1,7 @@
   #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
-
+#include "DDSTextureLoader.h"
 // For the DirectX Math library
 using namespace DirectX;
 
@@ -72,6 +72,12 @@ Game::~Game()
 	if (refractPS) {
 		delete refractPS;
 	}
+	if (skyVS) {
+		delete skyVS;
+	}
+	if (skyPS) {
+		delete skyPS;
+	}
 
 	
 	// Delete our simple shader objects, which
@@ -90,6 +96,9 @@ Game::~Game()
 	particleDepthState->Release();
 	particleBlendState->Release();
 	particleDebugRasterState->Release();
+	skySRV->Release();
+	skyRasterState->Release();
+	skyDepthState->Release();
 	delete emitter;
 	//depthState->Release();
 	//blendState->Release();
@@ -125,6 +134,7 @@ void Game::Init()
 	CreateWICTextureFromFile(device, context, L"../../Textures/rockNormals.jpg", 0, &rockNormalSRV);
 	CreateWICTextureFromFile(device, context, L"../../Textures/IceTexture.png", 0, &fenceSRV);
 	CreateWICTextureFromFile(device, context, L"../../Textures/multiplesnow.png", 0, &particleTexture);
+	CreateDDSTextureFromFile(device, L"../../Textures/SunnyCubeMap.dds", 0, &skySRV);
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -141,12 +151,6 @@ void Game::Init()
 	CreateBasicGeometry();
 
 	// This sends data to GPU!!!
-	
-
-
-
-	
-
 	
 	pixelShader->SetFloat3("CameraPosition", XMFLOAT3(0, 0, -5)); // Matches camera view definition above
 	
@@ -272,7 +276,17 @@ void Game::Init()
 	// Create the state
 	device->CreateBlendState(&bd, &rfBlendState);
 
+	D3D11_RASTERIZER_DESC raster = {};
+	raster.CullMode = D3D11_CULL_FRONT;
+	raster.FillMode = D3D11_FILL_SOLID;
+	raster.DepthClipEnable = true;
+	device->CreateRasterizerState(&raster, &skyRasterState);
 
+	D3D11_DEPTH_STENCIL_DESC depth = {};
+	depth.DepthEnable = true;
+	depth.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depth.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	device->CreateDepthStencilState(&depth, &skyDepthState);
 
 
 	// Tell the input assembler stage of the pipeline what kind of
@@ -312,6 +326,13 @@ void Game::LoadShaders()
 
 	particlePS = new SimplePixelShader(device, context);
 	particlePS->LoadShaderFile(L"ParticlePS.cso");
+
+	skyVS = new SimpleVertexShader(device, context);
+	skyVS->LoadShaderFile(L"skyVS.cso");
+
+	skyPS = new SimplePixelShader(device, context);
+	skyPS->LoadShaderFile(L"skyPS.cso");
+
 }
 
 
@@ -544,6 +565,31 @@ void Game::DrawRefraction() {
 	// Finally do the actual drawing
 	refractionEntity->Draw(context);
 }
+void Game::DrawSky()
+{
+	ID3D11Buffer* vb = g2->GetVertexBuffer();
+	ID3D11Buffer* ib = g2->GetIndexBuffer();
+
+	// Set buffers in the input assembler
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+
+	// Set up shaders
+	skyVS->SetMatrix4x4("view", camera1->GetViewMatrix());
+	skyVS->SetMatrix4x4("projection", camera1->GetProjectionMatrix());
+	skyVS->CopyAllBufferData();
+	skyVS->SetShader();
+
+	skyPS->SetShaderResourceView("Sky", skySRV);
+	skyPS->SetSamplerState("BasicSampler", samplerState);
+	skyPS->SetShader();
+
+	// Draw
+
+	context->DrawIndexed(g2->GetIndexCount(), 0, 0);
+}
 // --------------------------------------------------------
 // Clear the screen, redraw everything, present to the user
 // --------------------------------------------------------
@@ -563,7 +609,12 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	//// Draw the scene (WITHOUT the refracting object)
 	DrawScene(totalTime);
-
+	// Set up sky-specific render states
+	context->RSSetState(skyRasterState);
+	context->OMSetDepthStencilState(skyDepthState, 0);
+	DrawSky();
+	context->RSSetState(0);
+	context->OMSetDepthStencilState(0, 0);
 	float blend[4] = { 1,1,1,1 };
 	context->OMSetBlendState(particleBlendState, blend, 0xffffffff);	// Additive blending
 	context->OMSetDepthStencilState(particleDepthState, 0);				// No depth WRITING
