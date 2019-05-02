@@ -59,5 +59,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 	refrUV.x *= -1.0f; // Flip the X to point away from the edge (Y already does this due to view space <-> texture space diff)
 	
 	// Sample the pixels of the render target and return
-	return ScenePixels.Sample(RefractSampler, input.screenUV + refrUV);
+	float4 textureColor = ScenePixels.Sample(RefractSampler, input.screenUV + refrUV);
+	float3 rgb = textureColor.rgb;
+	float edgeFactor = abs(dot(-dirToPixel, input.normal));
+	float oneMinusEdge = 1.0 - edgeFactor;
+	float opacity = min(1.0f, oneMinusEdge);
+	return float4(rgb,opacity)+float4(0.5,0.5,0.5,opacity);
 }

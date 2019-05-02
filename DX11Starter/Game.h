@@ -25,6 +25,7 @@ public:
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 	void DrawScene(float totalTime);
+	void DrawParticles(float totalTime);
 	void DrawFullscreenQuad(ID3D11ShaderResourceView* texture);
 	void DrawRefraction();
 	// Overridden mouse input helper methods

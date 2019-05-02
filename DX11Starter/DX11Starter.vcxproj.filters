@@ -81,22 +81,22 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Refraction Demo\DX11Starter\FullscreenQuadPS.hlsl">
+    <FxCompile Include="FullscreenQuadPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Refraction Demo\DX11Starter\FullscreenQuadVS.hlsl">
+    <FxCompile Include="FullscreenQuadVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Refraction Demo\DX11Starter\RefractPS.hlsl">
+    <FxCompile Include="ParticlePS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Refraction Demo\DX11Starter\RefractVS.hlsl">
+    <FxCompile Include="ParticleVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Hybrid Particle Demo\DX11Starter\ParticlePS.hlsl">
+    <FxCompile Include="RefractPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\Hybrid Particle Demo\DX11Starter\ParticleVS.hlsl">
+    <FxCompile Include="RefractVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

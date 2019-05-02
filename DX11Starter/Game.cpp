@@ -54,6 +54,25 @@ Game::~Game()
 	if (pixelShader) {
 		delete pixelShader;
 	}
+	if (particleVS) {
+		delete particleVS;
+	}
+	if (particlePS) {
+		delete particlePS;
+	}
+	if (quadVS) {
+		delete quadVS;
+	}
+	if (quadPS) {
+		delete quadPS;
+	}
+	if (refractVS) {
+		delete refractVS;
+	}
+	if (refractPS) {
+		delete refractPS;
+	}
+
 	
 	// Delete our simple shader objects, which
 	// will clean up their own internal DirectX stuff
@@ -61,6 +80,17 @@ Game::~Game()
 	rockSRV->Release();
 	rockNormalSRV->Release();
 	fenceSRV->Release();
+	//rasterState->Release();
+	rfBlendState->Release();
+	//depthState->Release();
+	refractSampler->Release();
+	refractionRTV->Release();
+	refractionSRV->Release();
+	particleTexture->Release();
+	particleDepthState->Release();
+	particleBlendState->Release();
+	particleDebugRasterState->Release();
+	delete emitter;
 	//depthState->Release();
 	//blendState->Release();
 	//rasterState->Release();
@@ -75,12 +105,13 @@ Game::~Game()
 	delete gameEntity5;
 	delete g1;
 	delete g2;
+	delete refractionEntity;
 	//delete g3;
 	delete camera1;
 	
 	delete material1;
 	delete material2;
-	
+	delete refractionMaterial;
 }
 
 // --------------------------------------------------------
@@ -457,6 +488,14 @@ void Game::DrawScene(float totalTime) {
 	// Particle states
 	
 }
+void Game::DrawParticles(float totalTime)
+{
+	particlePS->SetInt("debugWireframe", 0);
+	particlePS->CopyAllBufferData();
+
+	// Draw the emitter
+	emitter->Draw(context, camera1, totalTime);
+}
 void Game::DrawFullscreenQuad(ID3D11ShaderResourceView* texture) {
 	// First, turn off our buffers, as we'll be generating the vertex
 	// data on the fly in a special vertex shader using the index of each vert
@@ -524,12 +563,17 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	//// Draw the scene (WITHOUT the refracting object)
 	DrawScene(totalTime);
-	
+
+	float blend[4] = { 1,1,1,1 };
+	context->OMSetBlendState(particleBlendState, blend, 0xffffffff);	// Additive blending
+	context->OMSetDepthStencilState(particleDepthState, 0);				// No depth WRITING
+	// No wireframe debug
+	DrawParticles(totalTime);
 	// Back to the screen, but NO depth buffer for now!
 	// We just need to plaster the pixels from the render target onto the 
 	// screen without affecting (or respecting) the existing depth buffer
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
-
+	context->OMSetBlendState(0, blend, 0xffffffff);
 	// Draw a fullscreen quad with our render target texture (so the user can see
 	// what we've drawn so far).  
 	DrawFullscreenQuad(refractionSRV);
@@ -547,22 +591,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	// that we intend to sample from on the next frame
 	ID3D11ShaderResourceView* nullSRV[16] = {};
 	context->PSSetShaderResources(0, 16, nullSRV);
-
 	
 	
-
-	
-	float blend[4] = { 1,1,1,1 }; 
-	context->OMSetBlendState(particleBlendState, blend, 0xffffffff);	// Additive blending
-	context->OMSetDepthStencilState(particleDepthState, 0);				// No depth WRITING
-	// No wireframe debug
-	particlePS->SetInt("debugWireframe", 0);
-	particlePS->CopyAllBufferData();
-
-	// Draw the emitter
-	emitter->Draw(context, camera1, totalTime);
-
-	context->OMSetBlendState(0, blend, 0xffffffff);
 	context->OMSetDepthStencilState(0, 0);
 	context->RSSetState(0);
 	//// Present the back buffer to the user
