@@ -453,6 +453,7 @@ void Game::DrawScene(float totalTime) {
 		// Finally do the actual drawing
 		gameEntity1->Draw(context);
 	}
+	
 	// Particle states
 	
 }
@@ -547,16 +548,20 @@ void Game::Draw(float deltaTime, float totalTime)
 	ID3D11ShaderResourceView* nullSRV[16] = {};
 	context->PSSetShaderResources(0, 16, nullSRV);
 
-	float blend[4] = { 1,1,1,1 };
+	
+	
+
+	
+	float blend[4] = { 1,1,1,1 }; 
 	context->OMSetBlendState(particleBlendState, blend, 0xffffffff);	// Additive blending
 	context->OMSetDepthStencilState(particleDepthState, 0);				// No depth WRITING
-
 	// No wireframe debug
 	particlePS->SetInt("debugWireframe", 0);
 	particlePS->CopyAllBufferData();
 
 	// Draw the emitter
 	emitter->Draw(context, camera1, totalTime);
+
 	context->OMSetBlendState(0, blend, 0xffffffff);
 	context->OMSetDepthStencilState(0, 0);
 	context->RSSetState(0);
